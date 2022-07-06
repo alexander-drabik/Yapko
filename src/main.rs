@@ -5,7 +5,7 @@ mod lexer;
 fn main() {
     // Get code from file
     let args: Vec<_> = env::args().collect();
-    if !args.len() > 1 {
+    if args.len() < 2 {
         println!("No file given. Use: yapko [filename]");
         return;
     }
