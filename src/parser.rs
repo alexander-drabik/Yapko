@@ -37,7 +37,7 @@ impl Parser {
     }
 
     pub fn parse_tokens(&self, tokens: Vec<Token>) -> Node {
-        let mut nodes = vec![];
+        let mut nodes: Vec<Node> = vec![];
 
         #[derive(Clone)]
         struct Operator {
@@ -59,9 +59,15 @@ impl Parser {
                 parens_opened -= 1;
 
                 if parens_opened == 0 {
-                    nodes.push(self.parse_tokens(tokens_inside_parens.clone()));
-                    index += 1;
-                    tokens_inside_parens.clear();
+                    if matches!(nodes[index-1].token.token_type, TokenType::Identifier) {
+                        nodes[index-1].children.push(self.parse_tokens(tokens_inside_parens.clone()));
+                        tokens_inside_parens.clear();
+                    } else {
+                        nodes.push(self.parse_tokens(tokens_inside_parens.clone()));
+                        index += 1;
+                        tokens_inside_parens.clear();
+                    }
+
                     continue;
                 }
             }
@@ -92,22 +98,20 @@ impl Parser {
 
         for operator_index in 0..operators.len() {
             let mut index = 0;
-            {
-                let operator = &operators[operator_index];
-                index = operator.index.clone();
+            let operator = &operators[operator_index];
+            index = operator.index.clone();
 
-                // add left side
-                let node = nodes[operator.index-1].clone();
-                nodes[operator.index].children.push(node);
+            // add left side
+            let node = nodes[operator.index-1].clone();
+            nodes[operator.index].children.push(node);
 
-                // add right side
-                let node = nodes[operator.index+1].clone();
-                nodes[operator.index].children.push(node);
+            // add right side
+            let node = nodes[operator.index+1].clone();
+            nodes[operator.index].children.push(node);
 
-                // remove used nodes
-                nodes.remove(operator.index+1);
-                nodes.remove(operator.index-1);
-            }
+            // remove used nodes
+            nodes.remove(operator.index+1);
+            nodes.remove(operator.index-1);
 
             // two items were removed, so every index higher than the current one needs to be lowered by 2
             for operator2 in &mut operators {

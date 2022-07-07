@@ -14,6 +14,7 @@ fn main() {
     }
     let code = get_file_content(&args[1]);
 
+    println!("code: {}", code);
     let tokens = tokenize(code);
     let mut parser = Parser::new();
     parser.parse_tokens(tokens).print(0);
