@@ -11,7 +11,7 @@ pub struct Node {
 }
 
 impl Node {
-    fn print(&self, amount: i32) {
+    pub(crate) fn print(&self, amount: i32) {
         for _i in 0..amount {
             print!(" ");
         }
@@ -36,7 +36,7 @@ impl Parser {
         Parser{operator_values: operator}
     }
 
-    pub fn parse_tokens(&self, tokens: Vec<Token>) {
+    pub fn parse_tokens(&self, tokens: Vec<Token>) -> Node {
         let mut nodes = vec![];
 
         #[derive(Clone)]
@@ -45,22 +45,42 @@ impl Parser {
             index: usize
         }
         let mut operators = vec![];
+        let mut tokens_inside_parens = vec![];
 
+        let mut parens_opened = 0;
         let mut index = 0;
         for token in tokens {
-            let node = Node {
-                token,
-                children: vec![]
-            };
-            nodes.push(node);
-
-            if matches!(nodes[nodes.len()-1].token.token_type, TokenType::Operator) {
-                operators.push(Operator {
-                    value: nodes[nodes.len()-1].clone().token.value,
-                    index
-                });
+            if matches!(token.token_type, TokenType::ParenOpen) {
+                parens_opened += 1;
+                continue;
+            } else if matches!(token.token_type, TokenType::ParenClose) {
+                parens_opened -= 1;
+                nodes.push(self.parse_tokens(tokens_inside_parens.clone()));
+                index += 1;
+                tokens_inside_parens.clear();
+                continue;
             }
-            index += 1;
+
+            if parens_opened == 0 {
+                nodes.push(Node {
+                    token: token.clone(),
+                    children: vec![]
+                });
+
+                match nodes.last().expect("Node loading error").token.token_type {
+                    TokenType::Operator => {
+                        operators.push(Operator {
+                            value: nodes[nodes.len() - 1].clone().token.value,
+                            index
+                        });
+                    }
+                    _ => {}
+                }
+
+                index += 1;
+            } else {
+                tokens_inside_parens.push(token);
+            }
         }
 
         operators.sort_by(|a, b| self.operator_values[&b.value].cmp(&self.operator_values[&a.value]));
@@ -79,5 +99,7 @@ impl Parser {
                 }
             }
         }
+
+        nodes[0].clone()
     }
 }

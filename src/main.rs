@@ -16,7 +16,7 @@ fn main() {
 
     let tokens = tokenize(code);
     let mut parser = Parser::new();
-    parser.parse_tokens(tokens);
+    parser.parse_tokens(tokens).print(0);
 }
 
 fn get_file_content(filename: &String) -> String {

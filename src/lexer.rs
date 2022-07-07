@@ -26,7 +26,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
     for character in code.chars() {
         let mut single_character_token_present = true;
         match character {
-            '+'|'-'|'*'|'/'|'('|')' => {
+            '+'|'-'|'*'|'/' => {
                 let token = Token {
                     token_type: TokenType::Operator,
                     value: character.to_string()
@@ -36,6 +36,20 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
             '\n'|';' => {
                 let token = Token {
                     token_type: TokenType::End,
+                    value: character.to_string()
+                };
+                output.push(token);
+            }
+            '(' => {
+                let token = Token {
+                    token_type: TokenType::ParenOpen,
+                    value: character.to_string()
+                };
+                output.push(token);
+            }
+            ')' => {
+                let token = Token {
+                    token_type: TokenType::ParenClose,
                     value: character.to_string()
                 };
                 output.push(token);
