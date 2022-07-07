@@ -1,6 +1,9 @@
 use std::{env, fs};
+use crate::lexer::tokenize;
+use crate::parser::Parser;
 
 mod lexer;
+mod parser;
 
 fn main() {
     // Get code from file
@@ -10,6 +13,10 @@ fn main() {
         return;
     }
     let code = get_file_content(&args[1]);
+
+    let tokens = tokenize(code);
+    let mut parser = Parser::new();
+    parser.parse_tokens(tokens);
 }
 
 fn get_file_content(filename: &String) -> String {
