@@ -90,22 +90,28 @@ impl Parser {
 
         operators.sort_by(|a, b| self.operator_values[&b.value].cmp(&self.operator_values[&a.value]));
 
-        for operator in operators.to_vec() {
-            // add left side
-            let node = nodes[operator.index-1].clone();
-            nodes[operator.index].children.push(node);
+        for operator_index in 0..operators.len() {
+            let mut index = 0;
+            {
+                let operator = &operators[operator_index];
+                index = operator.index.clone();
 
-            // add right side
-            let node = nodes[operator.index+1].clone();
-            nodes[operator.index].children.push(node);
+                // add left side
+                let node = nodes[operator.index-1].clone();
+                nodes[operator.index].children.push(node);
 
-            // remove used nodes
-            nodes.remove(operator.index+1);
-            nodes.remove(operator.index-1);
+                // add right side
+                let node = nodes[operator.index+1].clone();
+                nodes[operator.index].children.push(node);
+
+                // remove used nodes
+                nodes.remove(operator.index+1);
+                nodes.remove(operator.index-1);
+            }
 
             // two items were removed, so every index higher than the current one needs to be lowered by 2
             for operator2 in &mut operators {
-                if operator2.index > operator.index {
+                if operator2.index > index {
                     operator2.index -= 2;
                 }
             }
