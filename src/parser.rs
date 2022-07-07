@@ -94,11 +94,13 @@ impl Parser {
             // add left side
             let node = nodes[operator.index-1].clone();
             nodes[operator.index].children.push(node);
-            nodes.remove(operator.index-1);
 
             // add right side
             let node = nodes[operator.index+1].clone();
             nodes[operator.index].children.push(node);
+
+            // remove used nodes
+            nodes.remove(operator.index-1);
             nodes.remove(operator.index+1);
 
             // two items were removed, so every index higher than the current one needs to be lowered by 2
