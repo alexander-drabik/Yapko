@@ -100,8 +100,8 @@ impl Parser {
             nodes[operator.index].children.push(node);
 
             // remove used nodes
-            nodes.remove(operator.index-1);
             nodes.remove(operator.index+1);
+            nodes.remove(operator.index-1);
 
             // two items were removed, so every index higher than the current one needs to be lowered by 2
             for operator2 in &mut operators {
