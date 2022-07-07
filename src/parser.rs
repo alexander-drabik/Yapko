@@ -52,13 +52,18 @@ impl Parser {
         for token in tokens {
             if matches!(token.token_type, TokenType::ParenOpen) {
                 parens_opened += 1;
-                continue;
+                if parens_opened == 1 {
+                    continue;
+                }
             } else if matches!(token.token_type, TokenType::ParenClose) {
                 parens_opened -= 1;
-                nodes.push(self.parse_tokens(tokens_inside_parens.clone()));
-                index += 1;
-                tokens_inside_parens.clear();
-                continue;
+
+                if parens_opened == 0 {
+                    nodes.push(self.parse_tokens(tokens_inside_parens.clone()));
+                    index += 1;
+                    tokens_inside_parens.clear();
+                    continue;
+                }
             }
 
             if parens_opened == 0 {
@@ -86,13 +91,17 @@ impl Parser {
         operators.sort_by(|a, b| self.operator_values[&b.value].cmp(&self.operator_values[&a.value]));
 
         for operator in operators.to_vec() {
-            let node = nodes[operator.index+1].clone();
-            nodes[operator.index].children.push(node);
+            // add left side
             let node = nodes[operator.index-1].clone();
             nodes[operator.index].children.push(node);
-            nodes.remove(operator.index+1);
             nodes.remove(operator.index-1);
 
+            // add right side
+            let node = nodes[operator.index+1].clone();
+            nodes[operator.index].children.push(node);
+            nodes.remove(operator.index+1);
+
+            // two items were removed, so every index higher than the current one needs to be lowered by 2
             for operator2 in &mut operators {
                 if operator2.index > operator.index {
                     operator2.index -= 2;
