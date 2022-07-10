@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use strum_macros::Display;
 
 #[derive(Clone)]
 pub struct Token {
@@ -6,7 +7,7 @@ pub struct Token {
     pub value: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Display)]
 pub enum TokenType {
     Identifier,
     NumberLiteral,
@@ -36,8 +37,10 @@ impl Keywords {
 pub(crate) fn tokenize(code: String) -> Vec<Token> {
     let mut output = vec![];
     let mut current = String::new();
+    let mut string = String::new();
     for character in code.chars() {
         let mut single_character_token_present = true;
+        string.push(character);
         match character {
             '+'|'-'|'*'|'/'|'=' => {
                 let token = Token {
@@ -67,6 +70,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
                 };
                 output.push(token);
             }
+
             _ => {
                 single_character_token_present = false;
                 current.push(character);
@@ -75,10 +79,9 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
         if character.is_whitespace() || single_character_token_present {
             let mut index = output.len();
             if output.len() > 1 {
+                index = output.len();
                 if single_character_token_present {
-                    index = output.len()-1;
-                } else {
-                    index = output.len()-2;
+                    index = output.len() - 1;
                 }
             }
 

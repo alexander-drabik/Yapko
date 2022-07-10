@@ -4,7 +4,7 @@ use std::fs::OpenOptions;
 use std::io::{Write};
 use crate::bytecode::ByteCode;
 use crate::interpreter::VM;
-use crate::lexer::tokenize;
+use crate::lexer::{tokenize, TokenType};
 use crate::parser::Parser;
 
 mod lexer;
@@ -24,10 +24,20 @@ fn main() {
 
     let tokens = tokenize(code);
     let parser = Parser::new();
-    let node = parser.parse_tokens(tokens);
-
     let bytecode = ByteCode::new();
-    let compiled_code = bytecode.generate_bytecode(node);
+    let mut compiled_code: Vec<u8> = vec![];
+
+    let mut tokens_to_parse = vec![];
+    for token in tokens {
+        if matches!(token.token_type, TokenType::End) {
+            let node = parser.parse_tokens(tokens_to_parse.clone());
+            compiled_code.append(&mut bytecode.generate_bytecode(node));
+            tokens_to_parse.clear();
+        } else {
+            tokens_to_parse.push(token);
+        }
+
+    }
 
     if args.len() > 2 && args[2] == "--compile" {
         let filename = args[1][0..args[1].find(".").unwrap_or(0)].to_owned() + ".yapkoc";
