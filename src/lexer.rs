@@ -1,14 +1,10 @@
-use std::fmt;
-use std::sync::mpsc::channel;
-use strum_macros::Display;
-
 #[derive(Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub value: String,
 }
 
-#[derive(Display, Debug, Clone)]
+#[derive(Clone)]
 pub enum TokenType {
     Identifier,
     NumberLiteral,
@@ -26,7 +22,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
     for character in code.chars() {
         let mut single_character_token_present = true;
         match character {
-            '+'|'-'|'*'|'/' => {
+            '+'|'-'|'*'|'/'|'=' => {
                 let token = Token {
                     token_type: TokenType::Operator,
                     value: character.to_string()

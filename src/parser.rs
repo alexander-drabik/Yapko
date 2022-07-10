@@ -1,13 +1,10 @@
-use std::collections::{HashMap, LinkedList};
-use std::fmt;
-use std::ops::Add;
+use std::collections::{HashMap};
 use crate::lexer::{Token, TokenType};
-use crate::lexer::TokenType::Operator;
 
 #[derive(Clone)]
 pub struct Node {
-    token: Token,
-    children: Vec<Node>
+    pub(crate) token: Token,
+    pub(crate) children: Vec<Node>
 }
 
 impl Node {
@@ -29,10 +26,11 @@ pub struct Parser {
 impl Parser {
     pub fn new() -> Parser {
         let mut operator: HashMap<String, i32> = Default::default();
-        operator.insert(String::from("+"), 0);
-        operator.insert(String::from("-"), 1);
-        operator.insert(String::from("*"), 2);
-        operator.insert(String::from("/"), 3);
+        operator.insert(String::from("="), 0);
+        operator.insert(String::from("+"), 1);
+        operator.insert(String::from("-"), 2);
+        operator.insert(String::from("*"), 3);
+        operator.insert(String::from("/"), 4);
         Parser{operator_values: operator}
     }
 
@@ -97,9 +95,8 @@ impl Parser {
         operators.sort_by(|a, b| self.operator_values[&b.value].cmp(&self.operator_values[&a.value]));
 
         for operator_index in 0..operators.len() {
-            let mut index = 0;
             let operator = &operators[operator_index];
-            index = operator.index.clone();
+            let index = operator.index.clone();
 
             // add left side
             let node = nodes[operator.index-1].clone();
