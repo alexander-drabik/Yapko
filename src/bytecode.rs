@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use crate::lexer::TokenType;
+use crate::lexer::{Keywords, TokenType};
 use crate::parser::Node;
 
 pub struct ByteCode {
-    commands: HashMap<String, u8>
+    pub commands: HashMap<String, u8>
 }
 
 impl ByteCode {
@@ -11,14 +11,17 @@ impl ByteCode {
         let mut commands: HashMap<String, u8> = HashMap::new();
         commands.insert(String::from(";"), 0);
         commands.insert(String::from("get"), 1);
-        commands.insert(String::from("push"), 2);
-        commands.insert(String::from("push_num"), 3);
-        commands.insert(String::from("push_str"), 4);
-        commands.insert(String::from("+"), 5);
-        commands.insert(String::from("-"), 6);
-        commands.insert(String::from("*"), 7);
-        commands.insert(String::from("/"), 8);
-        commands.insert(String::from("="), 8);
+        commands.insert(String::from("set_get"), 2);
+        commands.insert(String::from("set_get_num"), 3);
+        commands.insert(String::from("push"), 4);
+        commands.insert(String::from("push_num"), 5);
+        commands.insert(String::from("push_str"), 6);
+        commands.insert(String::from("+"), 7);
+        commands.insert(String::from("-"), 8);
+        commands.insert(String::from("*"), 9);
+        commands.insert(String::from("/"), 10);
+        commands.insert(String::from("="), 11);
+        commands.insert(String::from("call"), 21);
         ByteCode {
             commands
         }
@@ -71,6 +74,7 @@ impl ByteCode {
                     output.push(ch as u8);
                 }
                 output.push(0);
+                return output
             }
             TokenType::StringLiteral => {
                 let mut output = vec![];
@@ -88,6 +92,21 @@ impl ByteCode {
                 output.push(self.commands[&node.token.value]);
                 output.push(0);
                 return output;
+            }
+            TokenType::Keyword => {
+                if Keywords::new().list.contains(&*node.token.value) {
+                    match node.token.value.as_str(){
+                        "let" => {
+                            let mut output = vec![];
+                            output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                            output[0] = self.commands["set_get"];
+                            return output;
+                        },
+                        _ => {}
+                    }
+                } else {
+                    println!("{} not recognized", node.token.value);
+                }
             }
             TokenType::ParenOpen => {}
             TokenType::ParenClose => {}

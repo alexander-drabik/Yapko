@@ -118,6 +118,20 @@ impl Parser {
             }
         }
 
+        let mut max_index = nodes.len()-1;
+        for index in 0..nodes.len() {
+            if index > max_index {
+                break;
+            }
+            if matches!(nodes[index].token.token_type, TokenType::Keyword) {
+                if index+1 <= nodes.len() {
+                    let node = nodes[index+1].clone();
+                    nodes[index].children.push(node);
+                    nodes.remove(index+1);
+                    max_index -= 1;
+                }
+            }
+        }
         nodes[0].clone()
     }
 }

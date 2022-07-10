@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 #[derive(Clone)]
 pub struct Token {
     pub token_type: TokenType,
@@ -13,7 +15,22 @@ pub enum TokenType {
     ParenOpen,
     ParenClose,
     End,
+    Keyword,
     NONE
+}
+
+pub struct Keywords {
+    pub list: HashSet<String>
+}
+
+impl Keywords {
+    pub fn new() -> Keywords {
+        let mut list: HashSet<String> = HashSet::new();
+        list.insert(String::from("let"));
+        Keywords {
+            list
+        }
+    }
 }
 
 pub(crate) fn tokenize(code: String) -> Vec<Token> {
@@ -56,7 +73,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
             }
         };
         if character.is_whitespace() || single_character_token_present {
-            let mut index = 0;
+            let mut index = output.len();
             if output.len() > 1 {
                 if single_character_token_present {
                     index = output.len()-1;
@@ -84,11 +101,17 @@ fn generate_token_from_string(str: String) -> Token {
             };
             return token;
         } else if str.chars().all(char::is_alphabetic) {
-            let token = Token {
-                token_type: TokenType::Identifier,
-                value: str.to_string()
-            };
-            return token;
+            return if Keywords::new().list.contains(&*str) {
+                Token {
+                    token_type: TokenType::Keyword,
+                    value: str.to_string()
+                }
+            } else {
+                Token {
+                    token_type: TokenType::Identifier,
+                    value: str.to_string()
+                }
+            }
         }
     }
     return Token {
