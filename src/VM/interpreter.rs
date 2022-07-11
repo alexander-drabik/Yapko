@@ -33,6 +33,7 @@ impl VM {
                                 return;
                             }
                             let index = self.stack.len();
+                            self.stack[index-1].name = String::from(&self.stack[index-2].name);
                             *self.global.get_mut(&self.stack[index - 2].name).unwrap() = self.stack[index - 1].clone();
                             for _ in 0..2 {
                                 self.stack.remove(self.stack.len()-1);
@@ -51,7 +52,6 @@ impl VM {
                         }
                         "set_get" => {
                             if self.global.contains_key(&*argument) {
-                                println!("'{}' was already declared", argument);
                                 return;
                             } else {
                                 self.global.insert(argument.to_string(), generate_null(argument.to_string()));

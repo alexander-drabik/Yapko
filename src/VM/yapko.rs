@@ -33,7 +33,7 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
     YapkoObject {
         name,
         yapko_type: "Int".parse().unwrap(),
-        variables: hashmap![String::from("value") => Variable::Primitive(Primitive::Int(0))]
+        variables: hashmap![String::from("value") => Variable::Primitive(Primitive::Int(value))]
     }
 }
 
