@@ -1,12 +1,17 @@
 use std::collections::HashMap;
 
 #[derive(Clone)]
+pub enum Primitive {
+    Int(i32),
+    String(String)
+}
+
+#[derive(Clone)]
 pub struct YapkoObject {
     pub name: String,
     pub yapko_type: String,
     pub variables: HashMap<String, YapkoObject>,
-    pub int_variable: i32,
-    pub string_variable: String,
+    pub primitive: Primitive
 }
 
 pub fn generate_int(name: String, value: i32) -> YapkoObject {
@@ -14,8 +19,7 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
         name,
         yapko_type: "Int".parse().unwrap(),
         variables: Default::default(),
-        int_variable: value,
-        string_variable: "".to_string()
+        primitive: Primitive::Int(value)
     }
 }
 
@@ -24,7 +28,6 @@ pub fn generate_null(name: String) -> YapkoObject {
         name,
         yapko_type: "Null".parse().unwrap(),
         variables: Default::default(),
-        int_variable: 0,
-        string_variable: "".to_string()
+        primitive: Primitive::Int(0)
     }
 }
