@@ -6,6 +6,7 @@ use crate::bytecode::ByteCode;
 use crate::interpreter::VM;
 use crate::lexer::{tokenize, TokenType};
 use crate::parser::Parser;
+use crate::yapko::generate_standard;
 
 mod lexer;
 mod parser;
@@ -23,6 +24,9 @@ fn main() {
     let code = get_file_content(&args[1]);
 
     let tokens = tokenize(code);
+    for token in &tokens {
+    //    println!("{}", token.value);
+    }
     let parser = Parser::new();
     let bytecode = ByteCode::new();
     let mut compiled_code: Vec<u8> = vec![];
@@ -31,6 +35,7 @@ fn main() {
     for token in tokens {
         if matches!(token.token_type, TokenType::End) {
             let node = parser.parse_tokens(tokens_to_parse.clone());
+            node.print(0);
             compiled_code.append(&mut bytecode.generate_bytecode(node));
             tokens_to_parse.clear();
         } else {
@@ -54,8 +59,12 @@ fn main() {
             commands.insert(v, k);
         }
 
-        let mut interpreter = VM::new();
+        for byte in &compiled_code {
+            println!("{} {}", byte, *byte as char);
+        }
 
+        let mut interpreter = VM::new();
+        interpreter.global = generate_standard();
         interpreter.interpret(compiled_code, commands);
     }
 }

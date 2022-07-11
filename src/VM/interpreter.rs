@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use std::os::linux::raw::stat;
-use crate::yapko::{generate_int, generate_null, YapkoObject};
+use crate::yapko::{generate_int, generate_null, Primitive, Variable, YapkoObject};
+use crate::yapko::Primitive::Function;
 
 pub struct VM {
     stack: Vec<YapkoObject>,
-    global: HashMap<String, YapkoObject>
+    pub(crate) global: HashMap<String, YapkoObject>
 }
 
 impl VM {
@@ -17,11 +17,14 @@ impl VM {
 
     pub fn interpret(&mut self, bytecode: Vec<u8>, commands: HashMap<u8, String>) {
         let mut new_command = true;
-        let mut arguments:Vec<String> = vec![];
+        let mut arguments:Vec<u8> = vec![];
         let mut argument = String::new();
         let mut command: u8 = 0;
         for byte in bytecode {
             if new_command {
+                if byte == 0 {
+                    continue;
+                }
                 command = byte;
                 new_command = false;
             } else {
@@ -40,7 +43,7 @@ impl VM {
                             }
                         }
                         "push_num" => {
-                            self.stack.push(generate_int(String::from("int"), argument.trim().to_string().parse::<i32>().unwrap()));
+                            self.stack.push(generate_int(String::from("$int"), argument.to_string().parse::<i32>().unwrap()));
                         }
                         "get" => {
                             if self.global.contains_key(&*argument) {
@@ -58,6 +61,24 @@ impl VM {
                                 self.stack.push(self.global[&argument].clone());
                             }
                         }
+                        "call" => {
+                            let a = self.stack[&self.stack.len()-1-arguments[0] as usize].clone();
+                            match &a.members["value"] {
+                                Variable::Primitive(Function(..)) => {
+                                    let function = if let Variable::Primitive(Function(function)) = a.members["value"] {
+                                        function(&mut self.stack);
+                                    } else  {
+                                        println!("Cannot invoke '{}'", a.name);
+                                        return;
+                                    };
+                                }
+                                _ => {
+                                    println!("Cannot invoke '{}'", a.name);
+                                    return;
+                                }
+                            }
+                            self.stack.remove(self.stack.len()-1);
+                        }
                         _ => {}
                     }
 
@@ -65,6 +86,7 @@ impl VM {
                     argument.clear();
                     arguments.clear();
                 } else {
+                    arguments.push(byte);
                     argument.push(byte as char);
                 }
             }
