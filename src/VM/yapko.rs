@@ -13,9 +13,9 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
     fn print_line(stack: &mut Vec<YapkoObject>) {
         let value = stack[stack.len()-1].clone();
         if value.members.contains_key("toString") {
-            let function = if let Variable::Primitive(Primitive::Function(function)) = &value.members[&String::from("toString")] {
+            if let Variable::Primitive(Primitive::Function(function)) = &value.members[&String::from("toString")] {
                 function(stack);
-                let string = if let Variable::Primitive(Primitive::YapkoString(string)) = &stack[stack.len()-1].members[&String::from("value")] {
+                if let Variable::Primitive(Primitive::YapkoString(string)) = &stack[stack.len()-1].members[&String::from("value")] {
                     println!("{}", string);
                 } else {
                     println!("Error converting {} to String", value.name);
@@ -65,10 +65,78 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
             return;
         };
     }
+
+    fn add(stack: &mut Vec<YapkoObject>) {
+        let left  = stack[stack.len()-2].clone();
+        let right = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Int(left_value)) = left.members["value"] {
+            if right.yapko_type != "Int" {
+                println!("Int does not implement add({})", right.yapko_type);
+            }
+            if let Variable::Primitive(Primitive::Int(right_value)) = right.members["value"] {
+                stack.push(generate_int(left.name, left_value + right_value));
+            }
+        }
+    }
+    fn sub(stack: &mut Vec<YapkoObject>) {
+        let left  = stack[stack.len()-2].clone();
+        let right = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Int(left_value)) = left.members["value"] {
+            if right.yapko_type != "Int" {
+                println!("Int does not implement add({})", right.yapko_type);
+            }
+            if let Variable::Primitive(Primitive::Int(right_value)) = right.members["value"] {
+                stack.push(generate_int(left.name, left_value - right_value));
+            }
+        }
+    }
+    fn div(stack: &mut Vec<YapkoObject>) {
+        let left  = stack[stack.len()-2].clone();
+        let right = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Int(left_value)) = left.members["value"] {
+            if right.yapko_type != "Int" {
+                println!("Int does not implement add({})", right.yapko_type);
+            }
+            if let Variable::Primitive(Primitive::Int(right_value)) = right.members["value"] {
+                stack.push(generate_int(left.name, left_value / right_value));
+            }
+        }
+    }
+    fn mul(stack: &mut Vec<YapkoObject>) {
+        let left  = stack[stack.len()-2].clone();
+        let right = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Int(left_value)) = left.members["value"] {
+            if right.yapko_type != "Int" {
+                println!("Int does not implement add({})", right.yapko_type);
+            }
+            if let Variable::Primitive(Primitive::Int(right_value)) = right.members["value"] {
+                stack.push(generate_int(left.name, left_value * right_value));
+            }
+        }
+    }
+
     YapkoObject {
         name,
         yapko_type: "Int".parse().unwrap(),
-        members: hashmap![String::from("value") => Variable::Primitive(Primitive::Int(value)), String::from("toString") => Variable::Primitive(Primitive::Function(to_string))]
+        members: hashmap![String::from("value") => Variable::Primitive(Primitive::Int(value)),
+            String::from("toString") => Variable::Primitive(Primitive::Function(to_string)),
+            String::from("add") => Variable::Primitive(Primitive::Function(add)),
+            String::from("sub") => Variable::Primitive(Primitive::Function(sub)),
+            String::from("mul") => Variable::Primitive(Primitive::Function(mul)),
+            String::from("div") => Variable::Primitive(Primitive::Function(div))
+        ]
     }
 }
 

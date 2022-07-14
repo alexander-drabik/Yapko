@@ -79,6 +79,29 @@ impl VM {
                             }
                             self.stack.remove(self.stack.len()-1);
                         }
+                        "+"|"-"|"*"|"/" => {
+                            let operator = match commands[&command].as_str() {
+                                "+" => {
+                                    "add"
+                                }
+                                "-" => {
+                                    "sub"
+                                }
+                                "*" => {
+                                    "mul"
+                                }
+                                "/" => {
+                                    "div"
+                                }
+                                &_ => {""}
+                            };
+                            let a = self.stack[&self.stack.len()-2].clone();
+                            if let Variable::Primitive(Function(function)) = a.members[operator] {
+                                function(&mut self.stack)
+                            } else {
+                                println!("Error at adding");
+                            }
+                        }
                         _ => {}
                     }
 
