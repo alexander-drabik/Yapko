@@ -31,7 +31,7 @@ impl ByteCode {
         match node.token.token_type {
             TokenType::Identifier => {
                 // Function
-                return if node.children.len() > 0 {
+                return if node.invoke {
                     let mut output = vec![];
 
                     // Get function

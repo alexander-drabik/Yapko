@@ -11,21 +11,25 @@ macro_rules! hashmap {
 
 pub fn generate_standard() -> HashMap<String, YapkoObject> {
     fn print_line(stack: &mut Vec<YapkoObject>) {
-        let value = stack[stack.len()-1].clone();
-        if value.members.contains_key("toString") {
-            if let Variable::Primitive(Primitive::Function(function)) = &value.members[&String::from("toString")] {
-                function(stack);
-                if let Variable::Primitive(Primitive::YapkoString(string)) = &stack[stack.len()-1].members[&String::from("value")] {
-                    println!("{}", string);
+        if stack.len() > 0 {
+            let value = stack[stack.len() - 1].clone();
+            if value.members.contains_key("toString") {
+                if let Variable::Primitive(Primitive::Function(function)) = &value.members[&String::from("toString")] {
+                    function(stack);
+                    if let Variable::Primitive(Primitive::YapkoString(string)) = &stack[stack.len() - 1].members[&String::from("value")] {
+                        println!("{}", string);
+                    } else {
+                        println!("Error converting {} to String", value.name);
+                    };
+                    stack.remove(stack.len() - 1);
                 } else {
                     println!("Error converting {} to String", value.name);
                 };
-                stack.remove(stack.len()-1);
             } else {
-                println!("Error converting {} to String", value.name);
-            };
+                println!("Function toString() not found in {}", value.yapko_type);
+            }
         } else {
-            println!("Function toString() not found in {}", value.yapko_type);
+            println!();
         }
     }
     let mut output = HashMap::new();

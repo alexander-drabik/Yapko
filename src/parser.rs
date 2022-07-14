@@ -4,7 +4,8 @@ use crate::lexer::{Token, TokenType};
 #[derive(Clone)]
 pub struct Node {
     pub(crate) token: Token,
-    pub(crate) children: Vec<Node>
+    pub(crate) children: Vec<Node>,
+    pub(crate) invoke: bool
 }
 
 impl Node {
@@ -58,11 +59,16 @@ impl Parser {
 
                 if parens_opened == 0 {
                     if matches!(nodes[index-1].token.token_type, TokenType::Identifier) {
-                        nodes[index-1].children.push(self.parse_tokens(tokens_inside_parens.clone()));
+                        if tokens_inside_parens.len() > 0 {
+                            nodes[index-1].children.push(self.parse_tokens(tokens_inside_parens.clone()));
+                        }
+                        nodes[index-1].invoke = true;
                         tokens_inside_parens.clear();
                     } else {
-                        nodes.push(self.parse_tokens(tokens_inside_parens.clone()));
-                        index += 1;
+                        if tokens_inside_parens.len() > 0 {
+                            nodes.push(self.parse_tokens(tokens_inside_parens.clone()));
+                            index += 1;
+                        }
                         tokens_inside_parens.clear();
                     }
 
@@ -73,7 +79,8 @@ impl Parser {
             if parens_opened == 0 {
                 nodes.push(Node {
                     token: token.clone(),
-                    children: vec![]
+                    children: vec![],
+                    invoke: false
                 });
 
                 match nodes.last().expect("Node loading error").token.token_type {
@@ -118,7 +125,11 @@ impl Parser {
             }
         }
 
-        let mut max_index = nodes.len()-1;
+        let mut max_index = if nodes.len() >= 1 {
+            nodes.len()-1
+        } else {
+            0
+        };
         for index in 0..nodes.len() {
             if index > max_index {
                 break;

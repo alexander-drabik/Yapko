@@ -18,14 +18,14 @@ fn main() {
     // Get code from file
     let args: Vec<_> = env::args().collect();
     if args.len() < 2 {
-        println!("No file given. Use: yapko [filename]");
+    //    println!("No file given. Use: yapko [filename]");
         return;
     }
     let code = get_file_content(&args[1]);
 
     let tokens = tokenize(code);
     for token in &tokens {
-        println!("{}", token.value);
+    //    println!("{}", token.value);
     }
     let parser = Parser::new();
     let bytecode = ByteCode::new();
@@ -35,7 +35,7 @@ fn main() {
     for token in tokens {
         if matches!(token.token_type, TokenType::End) {
             let node = parser.parse_tokens(tokens_to_parse.clone());
-            node.print(0);
+        //    node.print(0);
             compiled_code.append(&mut bytecode.generate_bytecode(node));
             tokens_to_parse.clear();
         } else {
@@ -60,7 +60,7 @@ fn main() {
         }
 
         for byte in &compiled_code {
-            println!("{} {}", byte, *byte as char);
+        //    println!("{} {}", byte, *byte as char);
         }
 
         let mut interpreter = VM::new();

@@ -62,7 +62,13 @@ impl VM {
                             }
                         }
                         "call" => {
-                            let a = self.stack[&self.stack.len()-1-arguments[0] as usize].clone();
+                            let index = if arguments.len() < 1 {
+                                self.stack.len()-1
+                            } else {
+                                self.stack.len()-1-arguments[0] as usize
+                            };
+                            let a = self.stack[index].clone();
+                            self.stack.remove(index);
                             match &a.members["value"] {
                                 Variable::Primitive(Function(..)) => {
                                     let function = if let Variable::Primitive(Function(function)) = a.members["value"] {
@@ -77,7 +83,6 @@ impl VM {
                                     return;
                                 }
                             }
-                            self.stack.remove(self.stack.len()-1);
                         }
                         "+"|"-"|"*"|"/" => {
                             let operator = match commands[&command].as_str() {
