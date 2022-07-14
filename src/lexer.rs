@@ -77,16 +77,10 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
             }
         };
         if character.is_whitespace() || single_character_token_present {
-            let mut index = 0;
+            let mut index = output.len();
             if output.len() > 1 {
                 if single_character_token_present {
                     index = output.len() - 1;
-                }
-            } else {
-                if single_character_token_present {
-                    index = 0;
-                } else {
-                    index = output.len();
                 }
             }
 

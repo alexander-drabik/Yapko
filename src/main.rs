@@ -25,7 +25,7 @@ fn main() {
 
     let tokens = tokenize(code);
     for token in &tokens {
-    //    println!("{}", token.value);
+        println!("{}", token.value);
     }
     let parser = Parser::new();
     let bytecode = ByteCode::new();
