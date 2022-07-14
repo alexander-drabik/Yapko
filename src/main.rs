@@ -34,9 +34,12 @@ fn main() {
     let mut tokens_to_parse = vec![];
     for token in tokens {
         if matches!(token.token_type, TokenType::End) {
-            let node = parser.parse_tokens(tokens_to_parse.clone());
-        //    node.print(0);
-            compiled_code.append(&mut bytecode.generate_bytecode(node));
+            if tokens_to_parse.len() > 0 {
+                let node = parser.parse_tokens(tokens_to_parse.clone());
+
+                compiled_code.append(&mut bytecode.generate_bytecode(node));
+            }
+            //    node.print(0);
             tokens_to_parse.clear();
         } else {
             tokens_to_parse.push(token);
