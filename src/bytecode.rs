@@ -3,7 +3,9 @@ use crate::lexer::{Keywords, TokenType};
 use crate::parser::Node;
 
 pub struct ByteCode {
-    pub commands: HashMap<String, u8>
+    pub commands: HashMap<String, u8>,
+    pub brackets_opened: i32,
+    pub functions: HashMap<i32, String>
 }
 
 impl ByteCode {
@@ -22,12 +24,16 @@ impl ByteCode {
         commands.insert(String::from("/"), 10);
         commands.insert(String::from("="), 11);
         commands.insert(String::from("call"), 21);
+        commands.insert(String::from("fun_start"), 22);
+        commands.insert(String::from("fun_end"), 23);
         ByteCode {
-            commands
+            commands,
+            brackets_opened: 0,
+            functions: HashMap::new()
         }
     }
 
-    pub fn generate_bytecode(&self, node: Node) -> Vec<u8> {
+    pub fn generate_bytecode(&mut self, node: Node) -> Vec<u8> {
         match node.token.token_type {
             TokenType::Identifier => {
                 // Function
@@ -102,16 +108,39 @@ impl ByteCode {
                             output[0] = self.commands["set_get"];
                             return output;
                         },
+                        "function" => {
+                            let mut output = vec![];
+                            output.push(self.commands["fun_start"]);
+                            for ch in node.children[0].token.value.chars() {
+                                output.push(ch as u8);
+                            }
+                            self.functions.insert(self.brackets_opened.clone()+1, node.children[0].token.value.clone());
+                            output.push(0);
+                            return output;
+                        }
                         _ => {}
                     }
                 } else {
                     println!("{} not recognized", node.token.value);
                 }
             }
-            TokenType::ParenOpen => {}
-            TokenType::ParenClose => {}
-            TokenType::End => {}
-            TokenType::NONE => {}
+            TokenType::BracketOpen => {
+                self.brackets_opened += 1;
+            }
+            TokenType::BracketClose => {
+                if self.functions.contains_key(&self.brackets_opened) {
+                    let mut output = vec![];
+                    output.push(self.commands["fun_end"]);
+                    for ch in self.functions[&self.brackets_opened].clone().chars() {
+                        output.push(ch as u8);
+                    }
+                    output.push(0);
+                    self.brackets_opened -= 1;
+                    return output;
+                }
+                self.brackets_opened -= 1;
+            }
+            _ => {}
         }
         return vec![0]
     }

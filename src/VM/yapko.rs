@@ -16,7 +16,7 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
             if value.members.contains_key("toString") {
                 if let Variable::Primitive(Primitive::Function(function)) = &value.members[&String::from("toString")] {
                     function(stack);
-                    if let Variable::Primitive(Primitive::YapkoString(string)) = &stack[stack.len() - 1].members[&String::from("value")] {
+                    if let Variable::Primitive(YapkoString(string)) = &stack[stack.len() - 1].members[&String::from("value")] {
                         println!("{}", string);
                     } else {
                         println!("Error converting {} to String", value.name);
@@ -47,6 +47,7 @@ pub enum Variable {
 pub enum Primitive {
     Int(i32),
     YapkoString(String),
+    YapkoFunction(Vec<u8>),
     Function(fn (stack: &mut Vec<YapkoObject>)),
     Null
 }
@@ -62,7 +63,7 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
     fn to_string(stack: &mut Vec<YapkoObject>) {
         let int = stack[stack.len()-1].clone();
         stack.remove(stack.len()-1);
-        let value =  if let Variable::Primitive(Primitive::Int(value)) = int.members["value"] {
+        if let Variable::Primitive(Primitive::Int(value)) = int.members["value"] {
             stack.push(generate_string(int.name, value.to_string()));
         } else {
             println!("Error converting {} to String", int.name);
@@ -149,6 +150,14 @@ pub fn generate_string(name: String, value: String) -> YapkoObject {
         name,
         yapko_type: "String".parse().unwrap(),
         members: hashmap![String::from("value") => Variable::Primitive(Primitive::YapkoString(value))]
+    }
+}
+
+pub fn generate_yapko_function(name: String, bytecode: Vec<u8>) -> YapkoObject {
+    YapkoObject {
+        name,
+        yapko_type: String::from("YapkoFunction"),
+        members: hashmap!(String::from("value") => Variable::Primitive(Primitive::YapkoFunction(bytecode)))
     }
 }
 

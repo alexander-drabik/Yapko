@@ -15,6 +15,8 @@ pub enum TokenType {
     Operator,
     ParenOpen,
     ParenClose,
+    BracketOpen,
+    BracketClose,
     End,
     Keyword,
     NONE
@@ -28,6 +30,8 @@ impl Keywords {
     pub fn new() -> Keywords {
         let mut list: HashSet<String> = HashSet::new();
         list.insert(String::from("let"));
+        list.insert(String::from("function"));
+
         Keywords {
             list
         }
@@ -70,7 +74,22 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
                 };
                 output.push(token);
             }
-
+            '{' => {
+                output.push(Token {
+                    token_type: TokenType::End,
+                    value: "\n".parse().unwrap()
+                });
+                output.push(Token {
+                    token_type: TokenType::BracketOpen,
+                    value: character.to_string()
+                });
+            }
+            '}' => {
+                output.push(Token {
+                    token_type: TokenType::BracketClose,
+                    value: character.to_string()
+                });
+            }
             _ => {
                 single_character_token_present = false;
                 current.push(character);
