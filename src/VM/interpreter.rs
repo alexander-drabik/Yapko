@@ -93,7 +93,11 @@ impl VM {
                                 }
                                 Variable::Primitive(YapkoFunction(..)) => {
                                     if let Variable::Primitive(YapkoFunction(mut function_bytecode)) = a.members["value"].clone() {
-                                        bytecode.append(&mut function_bytecode.clone());
+                                        let mut index = i;
+                                        for byte2 in function_bytecode {
+                                            bytecode.insert(index, byte2);
+                                            index += 1;
+                                        }
                                     } else  {
                                         println!("Cannot invoke '{}'", a.name);
                                         return;
