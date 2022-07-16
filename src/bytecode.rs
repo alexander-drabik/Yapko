@@ -26,6 +26,8 @@ impl ByteCode {
         commands.insert(String::from("call"), 21);
         commands.insert(String::from("fun_start"), 22);
         commands.insert(String::from("fun_end"), 23);
+        commands.insert(String::from("scope_new"), 24);
+        commands.insert(String::from("scope_end"), 25);
         ByteCode {
             commands,
             brackets_opened: 0,

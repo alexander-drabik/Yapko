@@ -4,7 +4,7 @@ use crate::yapko::Primitive::{Function, YapkoFunction};
 
 pub struct VM {
     stack: Vec<YapkoObject>,
-    pub(crate) global: HashMap<String, YapkoObject>,
+    pub(crate) scopes: Vec<HashMap<String, YapkoObject>>,
     inside_function: bool
 }
 
@@ -12,7 +12,7 @@ impl VM {
     pub fn new() -> VM {
         VM {
             stack: vec![],
-            global: HashMap::new(),
+            scopes: vec![HashMap::new()],
             inside_function: false
         }
     }
@@ -24,6 +24,8 @@ impl VM {
         let mut command: u8 = 0;
         let mut bytecode_of_function = vec![];
         let mut i = 0;
+
+        let mut current_scope = 0;
         loop {
             if i >= bytecode.len() {
                 break;
@@ -50,7 +52,13 @@ impl VM {
                             }
                             let index = self.stack.len();
                             self.stack[index-1].name = String::from(&self.stack[index-2].name);
-                            *self.global.get_mut(&self.stack[index - 2].name).unwrap() = self.stack[index - 1].clone();
+                            for i in (0..=current_scope).rev() {
+                                if self.scopes[i].contains_key(&self.stack[index - 2].name) {
+                                    *self.scopes[i].get_mut(&self.stack[index - 2].name).unwrap() = self.stack[index - 1].clone();
+                                    break;
+                                }
+                            }
+
                             for _ in 0..2 {
                                 self.stack.remove(self.stack.len()-1);
                             }
@@ -59,19 +67,29 @@ impl VM {
                             self.stack.push(generate_int(String::from("$int"), argument.to_string().parse::<i32>().unwrap()));
                         }
                         "get" => {
-                            if self.global.contains_key(&*argument) {
-                                self.stack.push(self.global[&argument].clone());
+                            let mut index2 = 0;
+                            let mut contains = -1;
+                            for scope in &self.scopes {
+                                if scope.contains_key(&*argument) {
+                                    contains = index2;
+                                }
+                                index2 += 1;
+                            }
+                            if contains >= 0 {
+                                //println!("{}", argument);
+                                self.stack.push(self.scopes[contains as usize][&argument].clone());
                             } else {
                                 println!("'{}' not found", argument);
                                 return;
                             }
                         }
                         "set_get" => {
-                            if self.global.contains_key(&*argument) {
+                            if self.scopes[current_scope].contains_key(&*argument) {
+                                println!("{} was already defined", &*argument);
                                 return;
                             } else {
-                                self.global.insert(argument.to_string(), generate_null(argument.to_string()));
-                                self.stack.push(self.global[&argument].clone());
+                                self.scopes[current_scope].insert(argument.to_string(), generate_null(argument.to_string()));
+                                self.stack.push(self.scopes[current_scope][&argument].clone());
                             }
                         }
                         "call" => {
@@ -93,10 +111,20 @@ impl VM {
                                 }
                                 Variable::Primitive(YapkoFunction(..)) => {
                                     if let Variable::Primitive(YapkoFunction(mut function_bytecode)) = a.members["value"].clone() {
-                                        let mut index = i;
+                                        let mut index = i+2;
+                                        // Insert scope_new
+                                        bytecode.insert(i, 24);
+                                        bytecode.insert(i+1, 0);
                                         for byte2 in function_bytecode {
                                             bytecode.insert(index, byte2);
                                             index += 1;
+                                        }
+                                        // Insert scope_end
+                                        bytecode.insert(index, 25);
+                                        bytecode.insert(index+1, 0);
+
+                                        for byte in bytecode.clone() {
+                                        //    println!("{} {}", byte, byte as char);
                                         }
                                     } else  {
                                         println!("Cannot invoke '{}'", a.name);
@@ -135,6 +163,14 @@ impl VM {
                         "fun_start" => {
                             self.inside_function = true;
                         }
+                        "scope_new" => {
+                            self.scopes.push(HashMap::new());
+                            current_scope += 1;
+                        }
+                        "scope_end" => {
+                            self.scopes.remove(current_scope);
+                            current_scope -= 1;
+                        }
                         _ => {}
                     }
 
@@ -151,7 +187,7 @@ impl VM {
                     if commands[&command] == String::from("fun_end") {
                         if byte == 0 {
                             self.inside_function = false;
-                            self.global.insert(argument.clone(), generate_yapko_function(argument.clone(), bytecode_of_function.clone()));
+                            self.scopes[current_scope].insert(argument.clone(), generate_yapko_function(argument.clone(), bytecode_of_function.clone()));
                             bytecode_of_function.clear();
                             argument.clear();
                         } else {

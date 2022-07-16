@@ -67,7 +67,7 @@ fn main() {
         }
 
         let mut interpreter = VM::new();
-        interpreter.global = generate_standard();
+        interpreter.scopes[0] = generate_standard();
         interpreter.interpret(compiled_code, commands);
     }
 }
