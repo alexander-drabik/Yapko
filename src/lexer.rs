@@ -12,6 +12,7 @@ pub enum TokenType {
     Identifier,
     NumberLiteral,
     StringLiteral,
+    BooleanLiteral,
     Operator,
     ParenOpen,
     ParenClose,
@@ -149,6 +150,12 @@ fn generate_token_from_string(str: String) -> Token {
                     value: str.to_string()
                 }
             } else {
+                if str == "true" || str == "false" {
+                    return Token {
+                        token_type: TokenType::BooleanLiteral,
+                        value: str.to_string()
+                    }
+                }
                 Token {
                     token_type: TokenType::Identifier,
                     value: str.to_string()

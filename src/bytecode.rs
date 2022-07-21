@@ -31,6 +31,7 @@ impl ByteCode {
         commands.insert(String::from("scope_end"), 25);
         commands.insert(String::from("arg"), 26);
         commands.insert(String::from("arg_type"), 27);
+        commands.insert(String::from("push_bool"), 28);
         ByteCode {
             commands,
             brackets_opened: 0,
@@ -93,6 +94,13 @@ impl ByteCode {
                 for ch in node.token.value.chars() {
                     output.push(ch as u8);
                 }
+                output.push(0);
+                return output;
+            }
+            TokenType::BooleanLiteral => {
+                let mut output = vec![];
+                output.push(self.commands["push_bool"]);
+                output.push(if node.token.value == "true" {'1' as u8} else {'0' as u8});
                 output.push(0);
                 return output;
             }

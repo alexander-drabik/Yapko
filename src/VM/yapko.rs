@@ -55,6 +55,7 @@ pub enum Primitive {
     YapkoString(String),
     YapkoFunction(Vec<u8>, Vec<(usize, String)>),
     Function(fn (stack: &mut Vec<YapkoObject>)),
+    Boolean(bool),
     Null
 }
 
@@ -156,6 +157,27 @@ pub fn generate_string(name: String, value: String) -> YapkoObject {
         name,
         yapko_type: "String".parse().unwrap(),
         members: hashmap![String::from("value") => Variable::Primitive(Primitive::YapkoString(value))]
+    }
+}
+
+pub fn generate_boolean(name: String, value: bool) -> YapkoObject {
+    fn to_string(stack: &mut Vec<YapkoObject>) {
+        let boolean = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        if let Variable::Primitive(Primitive::Boolean(value)) = boolean.members["value"] {
+            stack.push(generate_string(boolean.name, value.to_string()));
+        } else {
+            println!("Error converting {} to String", boolean.name);
+            return;
+        };
+    }
+    YapkoObject {
+        name,
+        yapko_type: "Boolean".parse().unwrap(),
+        members: hashmap![
+            String::from("value") => Variable::Primitive(Primitive::Boolean(value)),
+            String::from("toString") => Variable::Primitive(Primitive::Function(to_string))
+        ]
     }
 }
 

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::process;
-use crate::yapko::{generate_int, generate_null, generate_string, generate_yapko_function, Primitive, Variable, YapkoObject};
+use crate::yapko::{generate_boolean, generate_int, generate_null, generate_string, generate_yapko_function, Primitive, Variable, YapkoObject};
 use crate::yapko::Primitive::{Function, YapkoFunction};
 
 pub struct VM {
@@ -75,6 +75,9 @@ impl VM {
                         "push_str" => {
                             self.stack.push(generate_string(String::from("$string"), argument.to_string()));
                         }
+                        "push_bool" => {
+                            self.stack.push(generate_boolean(String::from("$string"), if argument == "1" {true} else {false}));
+                        }
                         "get" => {
                             if used_variables.len() == 0 {
                                 let mut index2 = 0;
@@ -86,7 +89,6 @@ impl VM {
                                     index2 += 1;
                                 }
                                 if contains >= 0 {
-                                    //println!("{}", argument);
                                     self.stack.push(self.scopes[contains as usize][&argument].clone());
                                 } else {
                                     println!("'{}' not found", argument);
