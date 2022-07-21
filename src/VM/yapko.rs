@@ -26,7 +26,13 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
                     println!("Error converting {} to String", value.name);
                 };
             } else {
-                println!("Function toString() not found in {}", value.yapko_type);
+                if value.yapko_type == "String" {
+                    if let Variable::Primitive(YapkoString(string)) = &value.members[&String::from("value")] {
+                        println!("{}", string);
+                    }
+                } else {
+                    println!("Function toString() not found in {}", value.yapko_type);
+                }
             }
         } else {
             println!();

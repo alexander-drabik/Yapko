@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::process;
-use crate::yapko::{generate_int, generate_null, generate_yapko_function, Primitive, Variable, YapkoObject};
+use crate::yapko::{generate_int, generate_null, generate_string, generate_yapko_function, Primitive, Variable, YapkoObject};
 use crate::yapko::Primitive::{Function, YapkoFunction};
 
 pub struct VM {
@@ -29,7 +29,6 @@ impl VM {
 
         let mut used_variables:Vec<(usize, String)> = Vec::new();
         let mut current_function_argument = String::new();
-        let mut functions_arguments_length = 0;
         let mut invoke_started_at_scope = 0;
 
         let mut i = 0;
@@ -73,6 +72,9 @@ impl VM {
                         "push_num" => {
                             self.stack.push(generate_int(String::from("$int"), argument.to_string().parse::<i32>().unwrap()));
                         }
+                        "push_str" => {
+                            self.stack.push(generate_string(String::from("$string"), argument.to_string()));
+                        }
                         "get" => {
                             if used_variables.len() == 0 {
                                 let mut index2 = 0;
@@ -91,20 +93,19 @@ impl VM {
                                     return;
                                 }
                             } else {
-                                let mut contains = false;
-                                let mut index = 0;
-                                for (i, j) in &used_variables {
-                                    if *j == argument {
-                                        index = i.clone();
-                                        contains = true;
-                                    }
-                                    //println!("{} {}", j, argument)
-                                }
-                                if contains {
-                                    self.stack.push(self.scopes[index][&argument].clone());
+                                if self.scopes[current_scope].contains_key(&argument) {
+                                    self.stack.push(self.scopes[current_scope][&argument].clone());
                                 } else {
-                                    if self.scopes[current_scope].contains_key(&argument) {
-                                        self.stack.push(self.scopes[current_scope][&argument].clone());
+                                    let mut contains = false;
+                                    let mut index = 0;
+                                    for (i, j) in &used_variables {
+                                        if *j == argument {
+                                            index = i.clone();
+                                            contains = true;
+                                        }
+                                    }
+                                    if contains {
+                                        self.stack.push(self.scopes[index][&argument].clone());
                                     } else {
                                         println!("'{}' not found", argument);
                                         return;
@@ -123,10 +124,8 @@ impl VM {
                         }
                         "call" => {
                             let index = if arguments.len() < 1 {
-                                functions_arguments_length = 0;
                                 self.stack.len()-1
                             } else {
-                                functions_arguments_length = arguments[0];
                                 self.stack.len()-1-arguments[0] as usize
                             };
                             let a = self.stack[index].clone();
@@ -222,22 +221,18 @@ impl VM {
                             current_function_argument = argument.clone();
                         }
                         "arg_type" => {
-                            if self.stack.len() < functions_arguments_length as usize || self.stack.len() == 0 {
-                                println!("Expected {} arguments, but got {}", functions_arguments_length, self.stack.len());
-                                process::exit(1);
-                            }
-
-                            if self.stack[&self.stack.len()-functions_arguments_length as usize].yapko_type != argument {
+                            if self.stack[&self.stack.len()-1].yapko_type != argument {
                                 println!(
                                     "Expected {}, but got {}",
                                     argument,
-                                    self.stack[&self.stack.len()-functions_arguments_length as usize].yapko_type,
+                                    self.stack[&self.stack.len()-1].yapko_type,
                                 )
                             }
                             self.scopes[current_scope].insert(
                                 current_function_argument.clone(),
-                                self.stack[&self.stack.len()-functions_arguments_length as usize].clone()
+                                self.stack[&self.stack.len()-1].clone()
                             );
+                            self.stack.remove(&self.stack.len()-1);
                         }
                         _ => {}
                     }

@@ -42,9 +42,23 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
     let mut output = vec![];
     let mut current = String::new();
     let mut string = String::new();
+
+    let mut string_literal_start = false;
     for character in code.chars() {
         let mut single_character_token_present = true;
-        string.push(character);
+        if string_literal_start {
+            if character == '"' {
+                output.push(Token {
+                    token_type: TokenType::StringLiteral,
+                    value: string.clone()
+                });
+                string_literal_start = false;
+                current.clear();
+            } else {
+                string.push(character);
+            }
+            continue
+        }
         match character {
             '+'|'-'|'*'|'/'|'='|':' => {
                 let token = Token {
@@ -89,6 +103,13 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
                     token_type: TokenType::BracketClose,
                     value: character.to_string()
                 });
+            }
+            '"' => {
+                if !string_literal_start {
+                    string.clear();
+                    current.clear();
+                    string_literal_start = true;
+                }
             }
             _ => {
                 single_character_token_present = false;
