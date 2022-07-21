@@ -33,6 +33,10 @@ impl Parser {
         operator.insert(String::from("*"), 3);
         operator.insert(String::from("/"), 4);
         operator.insert(String::from(":"), 5);
+        operator.insert(String::from("and"), 6);
+        operator.insert(String::from("or"), 7);
+        operator.insert(String::from("xor"), 8);
+        operator.insert(String::from("!"), 9);
         Parser{operator_values: operator}
     }
 
@@ -105,25 +109,40 @@ impl Parser {
         for operator_index in 0..operators.len() {
             let operator = &operators[operator_index];
             let index = operator.index.clone();
+            if operator.value == "!" {
+                // add right side
+                let node = nodes[operator.index+1].clone();
+                nodes[operator.index].children.push(node);
 
-            // add left side
-            let node = nodes[operator.index-1].clone();
-            nodes[operator.index].children.push(node);
+                nodes.remove(operator.index+1);
 
-            // add right side
-            let node = nodes[operator.index+1].clone();
-            nodes[operator.index].children.push(node);
+                // two items were removed, so every index higher than the current one needs to be lowered by 2
+                for operator2 in &mut operators {
+                    if operator2.index > index {
+                        operator2.index -= 1;
+                    }
+                }
+            } else {
+                // add left side
+                let node = nodes[operator.index-1].clone();
+                nodes[operator.index].children.push(node);
 
-            // remove used nodes
-            nodes.remove(operator.index+1);
-            nodes.remove(operator.index-1);
+                // add right side
+                let node = nodes[operator.index+1].clone();
+                nodes[operator.index].children.push(node);
 
-            // two items were removed, so every index higher than the current one needs to be lowered by 2
-            for operator2 in &mut operators {
-                if operator2.index > index {
-                    operator2.index -= 2;
+                // remove used nodes
+                nodes.remove(operator.index+1);
+                nodes.remove(operator.index-1);
+
+                // two items were removed, so every index higher than the current one needs to be lowered by 2
+                for operator2 in &mut operators {
+                    if operator2.index > index {
+                        operator2.index -= 2;
+                    }
                 }
             }
+
         }
 
         let mut max_index = if nodes.len() >= 1 {

@@ -1,7 +1,8 @@
 use std::collections::HashMap;
+use std::env::remove_var;
 use std::process;
 use crate::yapko::{generate_boolean, generate_int, generate_null, generate_string, generate_yapko_function, Primitive, Variable, YapkoObject};
-use crate::yapko::Primitive::{Function, YapkoFunction};
+use crate::yapko::Primitive::{Boolean, Function, YapkoFunction};
 
 pub struct VM {
     stack: Vec<YapkoObject>,
@@ -203,6 +204,41 @@ impl VM {
                                 function(&mut self.stack)
                             } else {
                                 println!("Error at adding");
+                            }
+                        }
+                        "and"|"or"|"xor" => {
+                            let left = self.stack[&self.stack.len()-2].clone();
+                            let right = self.stack[&self.stack.len()-1].clone();
+                            if let Variable::Primitive(Boolean(left_value)) = left.members["value"] {
+                                if let Variable::Primitive(Boolean(right_value)) = right.members["value"] {
+                                    let result = match commands[&command].as_str() {
+                                        "and" => {
+                                            left_value && right_value
+                                        }
+                                        "or"  => {
+                                            left_value || right_value
+                                        }
+                                        "xor" => {
+                                            left_value ^ right_value
+                                        }
+                                        _ => {
+                                            process::exit(1);
+                                        }
+                                    };
+
+                                    self.stack.remove(&self.stack.len()-1);
+                                    self.stack.remove(&self.stack.len()-1);
+                                    self.stack.push(generate_boolean(String::from("$bool"), result));
+                                }
+                            } else {
+                                println!("Error")
+                            }
+                        }
+                        "!" => {
+                            let left = self.stack[&self.stack.len()-1].clone();
+                            if let Variable::Primitive(Boolean(boolean)) = left.members["value"] {
+                                self.stack.remove(&self.stack.len()-1);
+                                self.stack.push(generate_boolean(String::from("$bool"), !boolean));
                             }
                         }
                         "fun_start" => {

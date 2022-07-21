@@ -32,6 +32,10 @@ impl ByteCode {
         commands.insert(String::from("arg"), 26);
         commands.insert(String::from("arg_type"), 27);
         commands.insert(String::from("push_bool"), 28);
+        commands.insert(String::from("or"), 29);
+        commands.insert(String::from("xor"), 30);
+        commands.insert(String::from("and"), 31);
+        commands.insert(String::from("!"), 31);
         ByteCode {
             commands,
             brackets_opened: 0,
@@ -105,12 +109,20 @@ impl ByteCode {
                 return output;
             }
             TokenType::Operator => {
-                let mut output = vec![];
-                output.append(&mut self.generate_bytecode(node.children[0].clone()));
-                output.append(&mut self.generate_bytecode(node.children[1].clone()));
-                output.push(self.commands[&node.token.value]);
-                output.push(0);
-                return output;
+                return if node.token.value == "!" {
+                    let mut output = vec![];
+                    output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                    output.push(self.commands[&node.token.value]);
+                    output.push(0);
+                    output
+                } else {
+                    let mut output = vec![];
+                    output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                    output.append(&mut self.generate_bytecode(node.children[1].clone()));
+                    output.push(self.commands[&node.token.value]);
+                    output.push(0);
+                    output
+                }
             }
             TokenType::Keyword => {
                 if Keywords::new().list.contains(&*node.token.value) {
@@ -153,7 +165,7 @@ impl ByteCode {
                                 }
                             }
                             return output;
-                        }
+                        },
                         _ => {}
                     }
                 } else {

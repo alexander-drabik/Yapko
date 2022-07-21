@@ -61,7 +61,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
             continue
         }
         match character {
-            '+'|'-'|'*'|'/'|'='|':' => {
+            '+'|'-'|'*'|'/'|'='|':'|'!' => {
                 let token = Token {
                     token_type: TokenType::Operator,
                     value: character.to_string()
@@ -154,6 +154,16 @@ fn generate_token_from_string(str: String) -> Token {
                     return Token {
                         token_type: TokenType::BooleanLiteral,
                         value: str.to_string()
+                    }
+                } else {
+                    match &str as &str {
+                        "and"|"or"|"xor" => {
+                            return Token {
+                                token_type: TokenType::Operator,
+                                value: str.to_string()
+                            }
+                        }
+                        _ => {}
                     }
                 }
                 Token {
