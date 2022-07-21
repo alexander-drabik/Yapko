@@ -46,7 +46,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
         let mut single_character_token_present = true;
         string.push(character);
         match character {
-            '+'|'-'|'*'|'/'|'=' => {
+            '+'|'-'|'*'|'/'|'='|':' => {
                 let token = Token {
                     token_type: TokenType::Operator,
                     value: character.to_string()

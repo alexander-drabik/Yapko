@@ -32,6 +32,7 @@ impl Parser {
         operator.insert(String::from("-"), 2);
         operator.insert(String::from("*"), 3);
         operator.insert(String::from("/"), 4);
+        operator.insert(String::from(":"), 5);
         Parser{operator_values: operator}
     }
 

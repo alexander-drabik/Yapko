@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::process;
 use crate::yapko::{generate_int, generate_null, generate_yapko_function, Primitive, Variable, YapkoObject};
 use crate::yapko::Primitive::{Function, YapkoFunction};
 
@@ -25,7 +26,10 @@ impl VM {
         let mut bytecode_of_function = vec![];
 
         let mut current_scope = 0;
+
         let mut used_variables:Vec<(usize, String)> = Vec::new();
+        let mut current_function_argument = String::new();
+        let mut functions_arguments_length = 0;
         let mut invoke_started_at_scope = 0;
 
         let mut i = 0;
@@ -119,8 +123,10 @@ impl VM {
                         }
                         "call" => {
                             let index = if arguments.len() < 1 {
+                                functions_arguments_length = 0;
                                 self.stack.len()-1
                             } else {
+                                functions_arguments_length = arguments[0];
                                 self.stack.len()-1-arguments[0] as usize
                             };
                             let a = self.stack[index].clone();
@@ -135,31 +141,30 @@ impl VM {
                                     };
                                 }
                                 Variable::Primitive(YapkoFunction(..)) => {
-                                    if let Variable::Primitive(YapkoFunction(mut function_bytecode, this_used_variables)) = a.members["value"].clone() {
+                                    if let Variable::Primitive(
+                                        YapkoFunction(
+                                            mut function_bytecode,
+                                            this_used_variables
+                                        )
+                                    ) = a.members["value"].clone() {
                                         let mut index = i+2;
-                                        // Insert scope_new
+                                        // Insert scope_new (val: 24)
                                         bytecode.insert(i, 24);
+
+                                        // Insert everything inside function
                                         bytecode.insert(i+1, 0);
                                         for byte2 in function_bytecode {
                                             bytecode.insert(index, byte2);
                                             index += 1;
                                         }
-                                        // Insert scope_end
-                                        bytecode.insert(index, 25);
-                                        /*let mut index_of_scope = 0;
-                                        for scope_index in (0..=current_scope).rev() {
-                                            if self.scopes[scope_index].contains_key(&a.name) {
-                                                index_of_scope = scope_index;
-                                            }
-                                        }*/
 
+                                        // Insert scope_end (val: 25)
+                                        bytecode.insert(index, 25);
+
+                                        // Set function's scope
                                         used_variables.append(&mut this_used_variables.clone());
-                                        // used_variables.push((index_of_scope, a.name));
                                         invoke_started_at_scope = current_scope;
 
-                                        for byte in bytecode.clone() {
-                                        //    println!("{} {}", byte, byte as char);
-                                        }
                                     } else  {
                                         println!("Cannot invoke '{}'", a.name);
                                         return;
@@ -212,6 +217,27 @@ impl VM {
                             if current_scope == invoke_started_at_scope {
                                 used_variables.clear();
                             }
+                        }
+                        "arg" => {
+                            current_function_argument = argument.clone();
+                        }
+                        "arg_type" => {
+                            if self.stack.len() < functions_arguments_length as usize || self.stack.len() == 0 {
+                                println!("Expected {} arguments, but got {}", functions_arguments_length, self.stack.len());
+                                process::exit(1);
+                            }
+
+                            if self.stack[&self.stack.len()-functions_arguments_length as usize].yapko_type != argument {
+                                println!(
+                                    "Expected {}, but got {}",
+                                    argument,
+                                    self.stack[&self.stack.len()-functions_arguments_length as usize].yapko_type,
+                                )
+                            }
+                            self.scopes[current_scope].insert(
+                                current_function_argument.clone(),
+                                self.stack[&self.stack.len()-functions_arguments_length as usize].clone()
+                            );
                         }
                         _ => {}
                     }

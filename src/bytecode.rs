@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::process;
 use crate::lexer::{Keywords, TokenType};
 use crate::parser::Node;
 
@@ -28,6 +29,8 @@ impl ByteCode {
         commands.insert(String::from("fun_end"), 23);
         commands.insert(String::from("scope_new"), 24);
         commands.insert(String::from("scope_end"), 25);
+        commands.insert(String::from("arg"), 26);
+        commands.insert(String::from("arg_type"), 27);
         ByteCode {
             commands,
             brackets_opened: 0,
@@ -35,7 +38,7 @@ impl ByteCode {
         }
     }
 
-    pub fn generate_bytecode(&mut self, node: Node) -> Vec<u8> {
+    pub fn generate_bytecode(&mut self, mut node: Node) -> Vec<u8> {
         match node.token.token_type {
             TokenType::Identifier => {
                 // Function
@@ -118,6 +121,29 @@ impl ByteCode {
                             }
                             self.functions.insert(self.brackets_opened.clone()+1, node.children[0].token.value.clone());
                             output.push(0);
+                            for child in &node.children[0].children {
+                                if child.token.value == ":" {
+                                    // Add argument name to the bytecode
+                                    output.push(self.commands["arg"]);
+                                    for ch in child.children[0].token.value.chars() {
+                                        output.push(ch as u8);
+                                    }
+                                    output.push(0);
+
+                                    // Add argument type to the bytecode
+                                    output.push(self.commands["arg_type"]);
+                                    for ch in child.children[1].token.value.chars() {
+                                        output.push(ch as u8);
+                                    }
+                                    output.push(0);
+                                } else {
+                                    println!(
+                                        "Error at argument declaration in '{}'. \
+                                         Expected ':' operator", node.children[0].token.value
+                                    );
+                                    process::exit(1);
+                                }
+                            }
                             return output;
                         }
                         _ => {}

@@ -36,10 +36,10 @@ fn main() {
         if matches!(token.token_type, TokenType::End) {
             if tokens_to_parse.len() > 0 {
                 let node = parser.parse_tokens(tokens_to_parse.clone());
+                //node.print(0);
 
                 compiled_code.append(&mut bytecode.generate_bytecode(node));
             }
-            //    node.print(0);
             tokens_to_parse.clear();
         } else {
             tokens_to_parse.push(token);
@@ -63,7 +63,7 @@ fn main() {
         }
 
         for byte in &compiled_code {
-       //     println!("{} {}", byte, *byte as char);
+        //    println!("{} {}", byte, *byte as char);
         }
 
         let mut interpreter = VM::new();
