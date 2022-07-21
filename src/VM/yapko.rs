@@ -47,7 +47,7 @@ pub enum Variable {
 pub enum Primitive {
     Int(i32),
     YapkoString(String),
-    YapkoFunction(Vec<u8>),
+    YapkoFunction(Vec<u8>, Vec<(usize, String)>),
     Function(fn (stack: &mut Vec<YapkoObject>)),
     Null
 }
@@ -153,11 +153,13 @@ pub fn generate_string(name: String, value: String) -> YapkoObject {
     }
 }
 
-pub fn generate_yapko_function(name: String, bytecode: Vec<u8>) -> YapkoObject {
+pub fn generate_yapko_function(name: String, bytecode: Vec<u8>, used_variables: Vec<(usize, String)>) -> YapkoObject {
     YapkoObject {
         name,
         yapko_type: String::from("YapkoFunction"),
-        members: hashmap!(String::from("value") => Variable::Primitive(Primitive::YapkoFunction(bytecode)))
+        members: hashmap!(
+            String::from("value") => Variable::Primitive(Primitive::YapkoFunction(bytecode, used_variables))
+        )
     }
 }
 

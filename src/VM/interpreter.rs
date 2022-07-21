@@ -23,9 +23,11 @@ impl VM {
         let mut argument = String::new();
         let mut command: u8 = 0;
         let mut bytecode_of_function = vec![];
-        let mut i = 0;
 
         let mut current_scope = 0;
+        let mut used_variables:Vec<(usize, String)> = Vec::new();
+
+        let mut i = 0;
         loop {
             if i >= bytecode.len() {
                 break;
@@ -67,20 +69,42 @@ impl VM {
                             self.stack.push(generate_int(String::from("$int"), argument.to_string().parse::<i32>().unwrap()));
                         }
                         "get" => {
-                            let mut index2 = 0;
-                            let mut contains = -1;
-                            for scope in &self.scopes {
-                                if scope.contains_key(&*argument) {
-                                    contains = index2;
+                            if used_variables.len() == 0 {
+                                let mut index2 = 0;
+                                let mut contains = -1;
+                                for scope in &self.scopes {
+                                    if scope.contains_key(&*argument) {
+                                        contains = index2;
+                                    }
+                                    index2 += 1;
                                 }
-                                index2 += 1;
-                            }
-                            if contains >= 0 {
-                                //println!("{}", argument);
-                                self.stack.push(self.scopes[contains as usize][&argument].clone());
+                                if contains >= 0 {
+                                    //println!("{}", argument);
+                                    self.stack.push(self.scopes[contains as usize][&argument].clone());
+                                } else {
+                                    println!("'{}' not found", argument);
+                                    return;
+                                }
                             } else {
-                                println!("'{}' not found", argument);
-                                return;
+                                let mut contains = false;
+                                let mut index = 0;
+                                for (i, j) in &used_variables {
+                                    if *j == argument {
+                                        index = i.clone();
+                                        contains = true;
+                                    }
+                                    //println!("{} {}", j, argument)
+                                }
+                                if contains {
+                                    self.stack.push(self.scopes[index][&argument].clone());
+                                } else {
+                                    if self.scopes[current_scope].contains_key(&argument) {
+                                        self.stack.push(self.scopes[current_scope][&argument].clone());
+                                    } else {
+                                        println!("'{}' not found", argument);
+                                        return;
+                                    }
+                                }
                             }
                         }
                         "set_get" => {
@@ -110,7 +134,7 @@ impl VM {
                                     };
                                 }
                                 Variable::Primitive(YapkoFunction(..)) => {
-                                    if let Variable::Primitive(YapkoFunction(mut function_bytecode)) = a.members["value"].clone() {
+                                    if let Variable::Primitive(YapkoFunction(mut function_bytecode, this_used_variables)) = a.members["value"].clone() {
                                         let mut index = i+2;
                                         // Insert scope_new
                                         bytecode.insert(i, 24);
@@ -122,6 +146,8 @@ impl VM {
                                         // Insert scope_end
                                         bytecode.insert(index, 25);
                                         bytecode.insert(index+1, 0);
+
+                                        used_variables.append(&mut this_used_variables.clone());
 
                                         for byte in bytecode.clone() {
                                         //    println!("{} {}", byte, byte as char);
@@ -191,8 +217,34 @@ impl VM {
                     }
                     if commands[&command] == String::from("fun_end") {
                         if byte == 0 {
+                            // Create function outside scope
+                            let mut used_variables:Vec<(usize, String)> = Vec::new();
+                            for i in (0..=current_scope).rev() {
+                                for map in &self.scopes[i] {
+                                    // Check if used_variables already contain variable with the same name
+                                    let mut contains = false;
+                                    for j in 0..used_variables.len() {
+                                        if self.scopes[used_variables[j].0][&used_variables[j].1].name == map.0.clone() {
+                                            contains = true
+                                        }
+                                    }
+
+                                    // If it does not contain the variable add it to scope
+                                    if !contains {
+                                        used_variables.push((i, map.0.clone()));
+                                    }
+                                }
+                            }
+
                             self.inside_function = false;
-                            self.scopes[current_scope].insert(argument.clone(), generate_yapko_function(argument.clone(), bytecode_of_function.clone()));
+                            self.scopes[current_scope].insert(
+                                argument.clone(),
+                                generate_yapko_function(
+                                    argument.clone(),
+                                    bytecode_of_function.clone(),
+                                    used_variables
+                                )
+                            );
                             bytecode_of_function.clear();
                             argument.clear();
                         } else {
