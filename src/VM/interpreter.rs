@@ -154,7 +154,12 @@ impl VM {
                                 &_ => {""}
                             };
                             let a = self.stack[&self.stack.len()-2].clone();
-                            if let Variable::Primitive(Function(function)) = a.members[operator] {
+                            if let Variable::Primitive(Function(function)) = if a.members.contains_key(operator) {
+                                a.members[operator].clone()
+                            } else {
+                                println!("Variable {} ({}) does not implement function '{}'", a.name, a.yapko_type, operator);
+                                return;
+                            } {
                                 function(&mut self.stack)
                             } else {
                                 println!("Error at adding");
