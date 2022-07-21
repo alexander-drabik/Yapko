@@ -153,7 +153,8 @@ pub fn generate_string(name: String, value: String) -> YapkoObject {
     }
 }
 
-pub fn generate_yapko_function(name: String, bytecode: Vec<u8>, used_variables: Vec<(usize, String)>) -> YapkoObject {
+pub fn generate_yapko_function(name: String, bytecode: Vec<u8>, mut used_variables: Vec<(usize, String)>, scope: usize) -> YapkoObject {
+    used_variables.push((scope, name.clone()));
     YapkoObject {
         name,
         yapko_type: String::from("YapkoFunction"),

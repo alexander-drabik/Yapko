@@ -26,6 +26,7 @@ impl VM {
 
         let mut current_scope = 0;
         let mut used_variables:Vec<(usize, String)> = Vec::new();
+        let mut invoke_started_at_scope = 0;
 
         let mut i = 0;
         loop {
@@ -145,9 +146,16 @@ impl VM {
                                         }
                                         // Insert scope_end
                                         bytecode.insert(index, 25);
-                                        bytecode.insert(index+1, 0);
+                                        /*let mut index_of_scope = 0;
+                                        for scope_index in (0..=current_scope).rev() {
+                                            if self.scopes[scope_index].contains_key(&a.name) {
+                                                index_of_scope = scope_index;
+                                            }
+                                        }*/
 
                                         used_variables.append(&mut this_used_variables.clone());
+                                        // used_variables.push((index_of_scope, a.name));
+                                        invoke_started_at_scope = current_scope;
 
                                         for byte in bytecode.clone() {
                                         //    println!("{} {}", byte, byte as char);
@@ -201,6 +209,9 @@ impl VM {
                         "scope_end" => {
                             self.scopes.remove(current_scope);
                             current_scope -= 1;
+                            if current_scope == invoke_started_at_scope {
+                                used_variables.clear();
+                            }
                         }
                         _ => {}
                     }
@@ -242,7 +253,8 @@ impl VM {
                                 generate_yapko_function(
                                     argument.clone(),
                                     bytecode_of_function.clone(),
-                                    used_variables
+                                    used_variables,
+                                    current_scope
                                 )
                             );
                             bytecode_of_function.clear();
