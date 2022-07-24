@@ -36,6 +36,8 @@ impl ByteCode {
         commands.insert(String::from("xor"), 30);
         commands.insert(String::from("and"), 31);
         commands.insert(String::from("!"), 31);
+        commands.insert(String::from("if"), 32);
+        commands.insert(String::from("close"), 33);
         ByteCode {
             commands,
             brackets_opened: 0,
@@ -141,6 +143,8 @@ impl ByteCode {
                             }
                             self.functions.insert(self.brackets_opened.clone()+1, node.children[0].token.value.clone());
                             output.push(0);
+
+                            // Arguments
                             for child in &node.children[0].children {
                                 if child.token.value == ":" {
                                     // Add argument name to the bytecode
@@ -166,6 +170,13 @@ impl ByteCode {
                             }
                             return output;
                         },
+                        "if" => {
+                            let mut output = vec![];
+                            output.push(self.commands["if"]);
+                            output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                            output.push(0);
+                            return output;
+                        }
                         _ => {}
                     }
                 } else {
@@ -176,17 +187,22 @@ impl ByteCode {
                 self.brackets_opened += 1;
             }
             TokenType::BracketClose => {
+                let mut output = vec![];
                 if self.functions.contains_key(&self.brackets_opened) {
-                    let mut output = vec![];
                     output.push(self.commands["fun_end"]);
                     for ch in self.functions[&self.brackets_opened].clone().chars() {
                         output.push(ch as u8);
                     }
                     output.push(0);
+
+                    self.functions.remove(&self.brackets_opened);
                     self.brackets_opened -= 1;
-                    return output;
+                } else {
+                    output.push(self.commands["close"]);
+                    output.push(0);
                 }
                 self.brackets_opened -= 1;
+                return output;
             }
             _ => {}
         }

@@ -264,7 +264,8 @@ impl VM {
                                     "Expected {}, but got {}",
                                     argument,
                                     self.stack[&self.stack.len()-1].yapko_type,
-                                )
+                                );
+                                process::exit(1);
                             }
                             self.scopes[current_scope].insert(
                                 current_function_argument.clone(),

@@ -32,6 +32,7 @@ impl Keywords {
         let mut list: HashSet<String> = HashSet::new();
         list.insert(String::from("let"));
         list.insert(String::from("function"));
+        list.insert(String::from("if"));
 
         Keywords {
             list
@@ -128,8 +129,8 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
             let token = generate_token_from_string(String::from(current.trim()));
             if !matches!(token.token_type, TokenType::NONE) {
                 output.insert(index, token);
-                current.clear();
             }
+            current.clear();
         }
     }
     return output;
@@ -137,6 +138,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
 
 fn generate_token_from_string(str: String) -> Token {
     if !str.is_empty() {
+        println!(":: {}", str);
         if str.chars().all(char::is_numeric) {
             let token = Token {
                 token_type: TokenType::NumberLiteral,
