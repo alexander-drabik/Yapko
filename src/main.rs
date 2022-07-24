@@ -63,7 +63,7 @@ fn main() {
         }
 
         for byte in &compiled_code {
-        //    println!("{} {}", byte, *byte as char);
+            //println!("{} {}", byte, *byte as char);
         }
 
         let mut interpreter = VM::new();

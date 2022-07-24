@@ -32,6 +32,9 @@ impl VM {
         let mut current_function_argument = String::new();
         let mut invoke_started_at_scope = 0;
 
+        let mut inside_if = false;
+        let mut if_opened_at = 0;
+
         let mut i = 0;
         loop {
             if i >= bytecode.len() {
@@ -50,7 +53,7 @@ impl VM {
                 }
                 new_command = false;
             } else {
-                if byte == 0 && !self.inside_function {
+                if byte == 0 && !self.inside_function && !inside_if {
                     match commands[&command].as_str() {
                         "=" => {
                             if self.stack.len() < 2 {
@@ -77,7 +80,7 @@ impl VM {
                             self.stack.push(generate_string(String::from("$string"), argument.to_string()));
                         }
                         "push_bool" => {
-                            self.stack.push(generate_boolean(String::from("$string"), if argument == "1" {true} else {false}));
+                            self.stack.push(generate_boolean(String::from("bool"), if argument == "1" {true} else {false}));
                         }
                         "get" => {
                             if used_variables.len() == 0 {
@@ -288,6 +291,16 @@ impl VM {
                             );
                             self.stack.remove(&self.stack.len()-1);
                         }
+                        "if" => {
+                            let condition = self.stack[&self.stack.len()-1].clone();
+                            if let Variable::Primitive(Boolean(boolean)) = condition.members["value"] {
+                                if !boolean {
+                                    inside_if = true;
+                                    if_opened_at = current_scope;
+                                    current_scope += 1;
+                                }
+                            }
+                        }
                         _ => {}
                     }
 
@@ -295,9 +308,22 @@ impl VM {
                     argument.clear();
                     arguments.clear();
                 } else if !self.inside_function {
+                    if inside_if {
+                        if byte == 0 {
+                            new_command = true;
+                        }
+                        if commands[&command] == "close" {
+                            argument.clear();
+                            current_scope -= 1;
+                            if if_opened_at == current_scope {
+                                inside_if = false;
+                                continue;
+                            }
+                        }
+                    }
                     arguments.push(byte);
                     argument.push(byte as char);
-                } else {
+                } else if self.inside_function {
                     if byte == 0 {
                         new_command = true;
                     }
