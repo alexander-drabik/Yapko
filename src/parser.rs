@@ -35,19 +35,19 @@ impl Parser {
         operator.insert(String::from("/"), 4);
         operator.insert(String::from(":"), 5);
 
-        // Comparison operators
-        operator.insert(String::from("<"), 6);
-        operator.insert(String::from("<="), 6);
-        operator.insert(String::from(">"), 7);
-        operator.insert(String::from(">="), 8);
-        operator.insert(String::from("=="), 9);
-        operator.insert(String::from("!="), 10);
-
         // Logical operators
-        operator.insert(String::from("and"), 11);
-        operator.insert(String::from("or"), 12);
-        operator.insert(String::from("xor"), 13);
-        operator.insert(String::from("!"), 14);
+        operator.insert(String::from("and"), 6);
+        operator.insert(String::from("or"), 7);
+        operator.insert(String::from("xor"), 8);
+        operator.insert(String::from("!"), 9);
+
+        // Comparison operators
+        operator.insert(String::from("<"), 10);
+        operator.insert(String::from("<="), 11);
+        operator.insert(String::from(">"), 12);
+        operator.insert(String::from(">="), 13);
+        operator.insert(String::from("=="), 14);
+        operator.insert(String::from("!="), 15);
 
         Parser{operator_values: operator}
     }
