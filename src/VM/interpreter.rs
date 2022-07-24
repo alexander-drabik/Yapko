@@ -27,6 +27,19 @@ impl VM {
         let mut bytecode_of_function = vec![];
 
         let mut current_scope = 0;
+        fn new_scope(scopes: &mut Vec<HashMap<String, YapkoObject>>, scope: &mut usize) {
+            *scope += 1;
+            scopes.push(HashMap::new());
+        }
+        fn end_scope(scopes: &mut Vec<HashMap<String, YapkoObject>>, scope: &mut usize, invoke_started_at_scope: usize, used_variables: &mut Vec<(usize, String)>) {
+            if scopes.len() > *scope {
+                scopes.remove(*scope);
+            }
+            *scope -= 1;
+            if *scope == invoke_started_at_scope {
+                used_variables.clear();
+            }
+        }
 
         let mut used_variables:Vec<(usize, String)> = Vec::new();
         let mut current_function_argument = String::new();
@@ -263,15 +276,10 @@ impl VM {
                             self.inside_function = true;
                         }
                         "scope_new" => {
-                            self.scopes.push(HashMap::new());
-                            current_scope += 1;
+                            new_scope(&mut self.scopes, &mut current_scope);
                         }
                         "scope_end" => {
-                            self.scopes.remove(current_scope);
-                            current_scope -= 1;
-                            if current_scope == invoke_started_at_scope {
-                                used_variables.clear();
-                            }
+                            end_scope(&mut self.scopes, &mut current_scope, invoke_started_at_scope.clone(), &mut used_variables);
                         }
                         "arg" => {
                             current_function_argument = argument.clone();
@@ -297,9 +305,12 @@ impl VM {
                                 if !boolean {
                                     inside_if = true;
                                     if_opened_at = current_scope;
-                                    current_scope += 1;
                                 }
+                                new_scope(&mut self.scopes, &mut current_scope);
                             }
+                        }
+                        "close" => {
+                            end_scope(&mut self.scopes, &mut current_scope, invoke_started_at_scope.clone(), &mut used_variables);
                         }
                         _ => {}
                     }
@@ -314,11 +325,13 @@ impl VM {
                         }
                         if commands[&command] == "close" {
                             argument.clear();
-                            current_scope -= 1;
+                            end_scope(&mut self.scopes, &mut current_scope, invoke_started_at_scope.clone(), &mut used_variables);
                             if if_opened_at == current_scope {
                                 inside_if = false;
                                 continue;
                             }
+                        } else if commands[&command] == "if" {
+                            current_scope+=1;
                         }
                     }
                     arguments.push(byte);
