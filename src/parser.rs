@@ -27,16 +27,28 @@ pub struct Parser {
 impl Parser {
     pub fn new() -> Parser {
         let mut operator: HashMap<String, i32> = Default::default();
+        // Arithmetical operators
         operator.insert(String::from("="), 0);
         operator.insert(String::from("+"), 1);
         operator.insert(String::from("-"), 2);
         operator.insert(String::from("*"), 3);
         operator.insert(String::from("/"), 4);
         operator.insert(String::from(":"), 5);
-        operator.insert(String::from("and"), 6);
-        operator.insert(String::from("or"), 7);
-        operator.insert(String::from("xor"), 8);
-        operator.insert(String::from("!"), 9);
+
+        // Comparison operators
+        operator.insert(String::from("<"), 6);
+        operator.insert(String::from("<="), 6);
+        operator.insert(String::from(">"), 7);
+        operator.insert(String::from(">="), 8);
+        operator.insert(String::from("=="), 9);
+        operator.insert(String::from("!="), 10);
+
+        // Logical operators
+        operator.insert(String::from("and"), 11);
+        operator.insert(String::from("or"), 12);
+        operator.insert(String::from("xor"), 13);
+        operator.insert(String::from("!"), 14);
+
         Parser{operator_values: operator}
     }
 

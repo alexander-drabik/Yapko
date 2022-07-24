@@ -178,7 +178,7 @@ impl VM {
                                 }
                             }
                         }
-                        "+"|"-"|"*"|"/" => {
+                        "+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"!=" => {
                             let operator = match commands[&command].as_str() {
                                 "+" => {
                                     "add"
@@ -191,6 +191,21 @@ impl VM {
                                 }
                                 "/" => {
                                     "div"
+                                }
+                                "<" => {
+                                    "smallerThan"
+                                }
+                                ">" => {
+                                    "greaterThan"
+                                }
+                                "<=" => {
+                                    "smallerOrEqual"
+                                }
+                                ">=" => {
+                                    "greaterOrEqual"
+                                }
+                                "==" => {
+                                    "equalTo"
                                 }
                                 &_ => {""}
                             };

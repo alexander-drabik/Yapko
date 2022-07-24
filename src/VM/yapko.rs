@@ -138,6 +138,35 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
             }
         }
     }
+    fn smaller_than(stack: &mut Vec<YapkoObject>) {
+        let left = stack[stack.len()-2].clone();
+        let right= stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Int(left_value)) = left.members["value"] {
+            if let Variable::Primitive(Primitive::Int(right_value)) = right.members["value"] {
+                stack.push(generate_boolean("$bool".parse().unwrap(), left_value < right_value))
+            } else {
+                println!("Cannot compare Int to not-Int")
+            }
+        }
+    }
+
+    fn greater_than(stack: &mut Vec<YapkoObject>) {
+        let left = stack[stack.len()-2].clone();
+        let right= stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Int(left_value)) = left.members["value"] {
+            if let Variable::Primitive(Primitive::Int(right_value)) = right.members["value"] {
+                stack.push(generate_boolean("$bool".parse().unwrap(), left_value > right_value))
+            } else {
+                println!("Cannot compare Int to not-Int")
+            }
+        }
+    }
 
     YapkoObject {
         name,
@@ -147,7 +176,9 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
             String::from("add") => Variable::Primitive(Primitive::Function(add)),
             String::from("sub") => Variable::Primitive(Primitive::Function(sub)),
             String::from("mul") => Variable::Primitive(Primitive::Function(mul)),
-            String::from("div") => Variable::Primitive(Primitive::Function(div))
+            String::from("div") => Variable::Primitive(Primitive::Function(div)),
+            String::from("smallerThan") => Variable::Primitive(Primitive::Function(smaller_than)),
+            String::from("greaterThan") => Variable::Primitive(Primitive::Function(greater_than))
         ]
     }
 }

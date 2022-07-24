@@ -38,6 +38,12 @@ impl ByteCode {
         commands.insert(String::from("!"), 31);
         commands.insert(String::from("if"), 32);
         commands.insert(String::from("close"), 33);
+        commands.insert(String::from("<"), 34);
+        commands.insert(String::from(">"), 35);
+        commands.insert(String::from("<="), 36);
+        commands.insert(String::from(">="), 37);
+        commands.insert(String::from("=="), 38);
+        commands.insert(String::from("!="), 39);
         ByteCode {
             commands,
             brackets_opened: 0,
