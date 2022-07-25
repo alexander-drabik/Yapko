@@ -14,8 +14,10 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
         if stack.len() > 0 {
             let value = stack[stack.len() - 1].clone();
             if value.members.contains_key("toString") {
-                if let Variable::Primitive(Primitive::Function(function)) = &value.members[&String::from("toString")] {
-                    function(stack);
+                if let Variable::YapkoObject(yapko_function) = &value.members[&String::from("toString")] {
+                    if let Variable::Primitive(Primitive::Function(function)) = &yapko_function.members[&String::from("value")] {
+                        function(stack);
+                    }
                     if let Variable::Primitive(YapkoString(string)) = &stack[stack.len() - 1].members[&String::from("value")] {
                         println!("{}", string);
                     } else {
@@ -172,13 +174,13 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
         name,
         yapko_type: "Int".parse().unwrap(),
         members: hashmap![String::from("value") => Variable::Primitive(Primitive::Int(value)),
-            String::from("toString") => Variable::Primitive(Primitive::Function(to_string)),
-            String::from("add") => Variable::Primitive(Primitive::Function(add)),
-            String::from("sub") => Variable::Primitive(Primitive::Function(sub)),
-            String::from("mul") => Variable::Primitive(Primitive::Function(mul)),
-            String::from("div") => Variable::Primitive(Primitive::Function(div)),
-            String::from("smallerThan") => Variable::Primitive(Primitive::Function(smaller_than)),
-            String::from("greaterThan") => Variable::Primitive(Primitive::Function(greater_than))
+            String::from("toString") => Variable::YapkoObject(generate_function(String::from("toString"), to_string)),
+            String::from("add") => Variable::YapkoObject(generate_function(String::from("add"), add)),
+            String::from("sub") => Variable::YapkoObject(generate_function(String::from("sub"), sub)),
+            String::from("mul") => Variable::YapkoObject(generate_function(String::from("mul"), mul)),
+            String::from("div") => Variable::YapkoObject(generate_function(String::from("div"), div)),
+            String::from("smallerThan") => Variable::YapkoObject(generate_function(String::from("smallerThan"), smaller_than)),
+            String::from("greaterThan") => Variable::YapkoObject(generate_function(String::from("greaterThan"), greater_than))
         ]
     }
 }

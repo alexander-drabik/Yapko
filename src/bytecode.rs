@@ -44,6 +44,7 @@ impl ByteCode {
         commands.insert(String::from(">="), 38);
         commands.insert(String::from("=="), 39);
         commands.insert(String::from("!="), 40);
+        commands.insert(String::from("."), 41);
         ByteCode {
             commands,
             brackets_opened: 0,
@@ -122,6 +123,29 @@ impl ByteCode {
                     output.append(&mut self.generate_bytecode(node.children[0].clone()));
                     output.push(self.commands[&node.token.value]);
                     output.push(0);
+                    output
+                } else if node.token.value == "." {
+                    let mut output = vec![];
+                    output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                    output.push(self.commands[&node.token.value]);
+                    for ch in node.children[1].token.value.chars() {
+                        output.push(ch as u8);
+                    }
+                    output.push(0);
+                    if node.children[1].invoke {
+                        for child in &node.children[1].children {
+                            let bytecode = self.generate_bytecode(child.clone());
+                            for byte in bytecode {
+                                output.push(byte);
+                            }
+                            output.push(0);
+                        }
+
+                        // Call function
+                        output.push(self.commands["call"]);
+                        output.push(node.children[1].children.len() as u8);
+                        output.push(0);
+                    }
                     output
                 } else {
                     let mut output = vec![];

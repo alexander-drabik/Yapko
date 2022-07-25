@@ -226,15 +226,14 @@ impl VM {
                                 &_ => {""}
                             };
                             let a = self.stack[&self.stack.len()-2].clone();
-                            if let Variable::Primitive(Function(function)) = if a.members.contains_key(operator) {
-                                a.members[operator].clone()
-                            } else {
-                                println!("Variable {} ({}) does not implement function '{}'", a.name, a.yapko_type, operator);
-                                return;
-                            } {
-                                function(&mut self.stack)
-                            } else {
-                                println!("Error at adding");
+                            if a.members.contains_key(&*operator) {
+                                if let Variable::YapkoObject(yapko_function) = a.members[operator].clone() {
+                                    if let Variable::Primitive(Function(function)) = yapko_function.members["value"] {
+                                        function(&mut self.stack);
+                                    }
+                                } else {
+                                    println!("Variable {} ({}) does not implement function '{}'", a.name, a.yapko_type, operator);
+                                }
                             }
                         }
                         "and"|"or"|"xor" => {
@@ -263,6 +262,18 @@ impl VM {
                                 }
                             } else {
                                 println!("Error")
+                            }
+                        }
+                        "." => {
+                            let left = self.stack[&self.stack.len()-1].clone();
+
+                            if left.members.contains_key(&*argument) {
+                                if let Variable::YapkoObject(variable) = left.members[&argument.clone()].clone() {
+                                    self.stack.push(variable);
+                                }
+                            } else {
+                                println!("Variable {} does not implement {}", left.name, argument);
+                                process::exit(1);
                             }
                         }
                         "!" => {

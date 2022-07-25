@@ -49,6 +49,8 @@ impl Parser {
         operator.insert(String::from("=="), 14);
         operator.insert(String::from("!="), 15);
 
+        operator.insert(String::from("."), 16);
+
         Parser{operator_values: operator}
     }
 
