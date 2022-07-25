@@ -183,6 +183,12 @@ impl ByteCode {
                             output.push(0);
                             return output;
                         }
+                        "return" => {
+                            let mut output = vec![];
+                            output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                            output.push(0);
+                            return output;
+                        }
                         _ => {}
                     }
                 } else {

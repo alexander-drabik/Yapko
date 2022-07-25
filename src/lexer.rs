@@ -32,6 +32,7 @@ impl Keywords {
         let mut list: HashSet<String> = HashSet::new();
         list.insert(String::from("let"));
         list.insert(String::from("function"));
+        list.insert(String::from("return"));
         list.insert(String::from("if"));
 
         Keywords {
