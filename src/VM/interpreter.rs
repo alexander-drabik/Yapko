@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::env::remove_var;
+use std::hash::Hash;
 use std::process;
 use crate::yapko::{generate_boolean, generate_int, generate_null, generate_string, generate_yapko_function, Primitive, Variable, YapkoObject};
 use crate::yapko::Primitive::{Boolean, Function, YapkoFunction};
@@ -48,6 +49,11 @@ impl VM {
         let mut inside_if = false;
         let mut if_opened_at = 0;
 
+        let mut inside_loop = false;
+        let mut loop_map:HashMap<usize, Vec<u8>> = HashMap::new();
+        let mut loop_started_at = 0;
+        let mut loop_current = 0;
+
         let mut i = 0;
         loop {
             if i >= bytecode.len() {
@@ -66,7 +72,7 @@ impl VM {
                 }
                 new_command = false;
             } else {
-                if byte == 0 && !self.inside_function && !inside_if {
+                if byte == 0 && !self.inside_function && !inside_if && !inside_loop {
                     match commands[&command].as_str() {
                         "=" => {
                             if self.stack.len() < 2 {
@@ -320,8 +326,34 @@ impl VM {
                                 new_scope(&mut self.scopes, &mut current_scope);
                             }
                         }
+                        "condition" => {
+                            inside_loop = true;
+                            loop_map.remove(&current_scope);
+                            loop_map.insert(current_scope, vec![]);
+                            loop_started_at = current_scope;
+                            loop_current = current_scope;
+                        }
+                        "while" => {
+                            let condition = self.stack[&self.stack.len()-1].clone();
+                            if let Variable::Primitive(Boolean(boolean)) = condition.members["value"] {
+                                if !boolean {
+                                    loop_map.remove(&current_scope);
+                                    inside_if = true;
+                                    if_opened_at = current_scope;
+                                }
+                                new_scope(&mut self.scopes, &mut current_scope);
+                            }
+                        }
+
                         "close" => {
                             end_scope(&mut self.scopes, &mut current_scope, invoke_started_at_scope.clone(), &mut used_variables);
+                            if loop_map.contains_key(&current_scope) {
+                                let mut index = i;
+                                for byte2 in &loop_map[&current_scope] {
+                                    bytecode.insert(index, *byte2);
+                                    index += 1;
+                                }
+                            }
                         }
                         _ => {}
                     }
@@ -329,7 +361,7 @@ impl VM {
                     new_command = true;
                     argument.clear();
                     arguments.clear();
-                } else if !self.inside_function {
+                } else if !self.inside_function && !inside_loop {
                     if inside_if {
                         if byte == 0 {
                             new_command = true;
@@ -341,7 +373,7 @@ impl VM {
                                 inside_if = false;
                                 continue;
                             }
-                        } else if commands[&command] == "if" {
+                        } else if commands[&command] == "if" || commands[&command] == "while"{
                             current_scope+=1;
                         }
                     }
@@ -389,6 +421,39 @@ impl VM {
                         }
                     } else {
                         bytecode_of_function.push(byte);
+                    }
+                } else if inside_loop {
+                    if byte == 0 {
+                        if loop_map.contains_key(&loop_started_at) {
+                            let mut current_bytecode = loop_map[&loop_started_at].clone();
+                            current_bytecode.push(command);
+                            current_bytecode.append(&mut arguments);
+                            current_bytecode.push(0);
+
+                            loop_map.remove(&loop_started_at);
+                            loop_map.insert(loop_started_at, current_bytecode);
+                        }
+                        match commands[&command].as_str() {
+                            "close" => {
+                                loop_current -= 1;
+                                if loop_current == loop_started_at {
+                                    let mut index = i;
+                                    for byte2 in &loop_map[&loop_started_at] {
+                                        bytecode.insert(index, *byte2);
+                                        index += 1;
+                                    }
+                                    inside_loop = false;
+                                }
+                            }
+                            "while"|"if" => {
+                                loop_current += 1;
+                            }
+                            _ => {}
+                        }
+
+                        new_command = true;
+                    } else {
+                        arguments.push(byte);
                     }
                 }
             }

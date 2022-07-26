@@ -37,14 +37,16 @@ impl ByteCode {
         commands.insert(String::from("and"), 31);
         commands.insert(String::from("!"), 32);
         commands.insert(String::from("if"), 33);
-        commands.insert(String::from("close"), 34);
-        commands.insert(String::from("<"), 35);
-        commands.insert(String::from(">"), 36);
-        commands.insert(String::from("<="), 37);
-        commands.insert(String::from(">="), 38);
-        commands.insert(String::from("=="), 39);
-        commands.insert(String::from("!="), 40);
-        commands.insert(String::from("."), 41);
+        commands.insert(String::from("while"), 34);
+        commands.insert(String::from("condition"), 35);
+        commands.insert(String::from("close"), 36);
+        commands.insert(String::from("<"), 37);
+        commands.insert(String::from(">"), 38);
+        commands.insert(String::from("<="), 39);
+        commands.insert(String::from(">="), 40);
+        commands.insert(String::from("=="), 41);
+        commands.insert(String::from("!="), 42);
+        commands.insert(String::from("."), 43);
         ByteCode {
             commands,
             brackets_opened: 0,
@@ -204,6 +206,15 @@ impl ByteCode {
                             let mut output = vec![];
                             output.append(&mut self.generate_bytecode(node.children[0].clone()));
                             output.push(self.commands["if"]);
+                            output.push(0);
+                            return output;
+                        }
+                        "while" => {
+                            let mut output = vec![];
+                            output.push(self.commands["condition"]);
+                            output.push(0);
+                            output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                            output.push(self.commands["while"]);
                             output.push(0);
                             return output;
                         }

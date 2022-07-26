@@ -77,7 +77,7 @@ impl Parser {
                 parens_opened -= 1;
 
                 if parens_opened == 0 {
-                    if matches!(nodes[index-1].token.token_type, TokenType::Identifier) {
+                    if nodes.len() > 0 && matches!(nodes[index-1].token.token_type, TokenType::Identifier) {
                         if tokens_inside_parens.len() > 0 {
                             nodes[index-1].children.push(self.parse_tokens(tokens_inside_parens.clone()));
                         }
