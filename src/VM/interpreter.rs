@@ -195,8 +195,15 @@ impl VM {
                                     };
                                 }
                                 _ => {
-                                    println!("Cannot invoke '{}'", a.name);
-                                    return;
+                                    if a.yapko_type == "class" {
+                                        // Create variable with default parameters
+                                        let mut new_a = a.clone();
+                                        new_a.yapko_type = a.name.clone();
+                                        self.stack.push(new_a.clone());
+                                    } else {
+                                        println!("Cannot invoke '{}'", a.name);
+                                        return;
+                                    }
                                 }
                             }
                         }

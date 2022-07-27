@@ -42,6 +42,19 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
     }
     let mut output = HashMap::new();
     output.insert(String::from("printLine"), generate_function(String::from("printLine"), print_line));
+
+    let mut int_class = generate_int(String::from("Int"), 0);
+    int_class.yapko_type = String::from("class");
+    output.insert(String::from("Int"), int_class);
+
+    let mut string_class = generate_string(String::from("Int"), String::new());
+    string_class.yapko_type = String::from("class");
+    output.insert(String::from("String"), string_class);
+
+    let mut boolean_class = generate_boolean(String::from("Boolean"), false);
+    boolean_class.yapko_type = String::from("class");
+    output.insert(String::from("Boolean"), boolean_class);
+
     return output;
 }
 

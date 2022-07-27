@@ -134,6 +134,8 @@ impl ByteCode {
                         output.push(ch as u8);
                     }
                     output.push(0);
+
+                    // Is a function
                     if node.children[1].invoke {
                         for child in &node.children[1].children {
                             let bytecode = self.generate_bytecode(child.clone());
