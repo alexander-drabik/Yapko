@@ -43,6 +43,38 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
     let mut output = HashMap::new();
     output.insert(String::from("printLine"), generate_function(String::from("printLine"), print_line));
 
+    fn print(stack: &mut Vec<YapkoObject>) {
+        if stack.len() > 0 {
+            let value = stack[stack.len() - 1].clone();
+            if value.members.contains_key("toString") {
+                if let Variable::YapkoObject(yapko_function) = &value.members[&String::from("toString")] {
+                    if let Variable::Primitive(Primitive::Function(function)) = &yapko_function.members[&String::from("value")] {
+                        function(stack);
+                    }
+                    if let Variable::Primitive(YapkoString(string)) = &stack[stack.len() - 1].members[&String::from("value")] {
+                        print!("{}", string);
+                    } else {
+                        println!("Error converting {} to String", value.name);
+                    };
+                    stack.remove(stack.len() - 1);
+                } else {
+                    println!("Error converting {} to String", value.name);
+                };
+            } else {
+                if value.yapko_type == "String" {
+                    if let Variable::Primitive(YapkoString(string)) = &value.members[&String::from("value")] {
+                        print!("{}", string);
+                    }
+                } else {
+                    println!("Function toString() not found in {}", value.yapko_type);
+                }
+            }
+        } else {
+            println!();
+        }
+    }
+    output.insert(String::from("print"), generate_function(String::from("print"), print));
+
     let mut int_class = generate_int(String::from("Int"), 0);
     int_class.yapko_type = String::from("class");
     output.insert(String::from("Int"), int_class);
@@ -222,7 +254,7 @@ pub fn generate_boolean(name: String, value: bool) -> YapkoObject {
         yapko_type: "Boolean".parse().unwrap(),
         members: hashmap![
             String::from("value") => Variable::Primitive(Primitive::Boolean(value)),
-            String::from("toString") => Variable::Primitive(Primitive::Function(to_string))
+            String::from("toString") => Variable::YapkoObject(generate_function(String::from("toString"), to_string))
         ]
     }
 }
