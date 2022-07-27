@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use crate::yapko::Primitive::YapkoString;
+use std::process;
+use crate::yapko::Primitive::{Function, YapkoString};
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{
@@ -8,70 +9,94 @@ macro_rules! hashmap {
          map
     }}
 }
+fn execute_function(stack: &mut Vec<YapkoObject>, function_object: &YapkoObject) {
+    let value = &function_object.members[&String::from("value")];
+    if let Variable::Primitive(Primitive::Function(function)) = value {
+        function(stack);
+    }
+}
 
 pub fn generate_standard() -> HashMap<String, YapkoObject> {
     fn print_line(stack: &mut Vec<YapkoObject>) {
-        if stack.len() > 0 {
-            let value = stack[stack.len() - 1].clone();
-            if value.members.contains_key("toString") {
-                if let Variable::YapkoObject(yapko_function) = &value.members[&String::from("toString")] {
-                    if let Variable::Primitive(Primitive::Function(function)) = &yapko_function.members[&String::from("value")] {
-                        function(stack);
-                    }
-                    if let Variable::Primitive(YapkoString(string)) = &stack[stack.len() - 1].members[&String::from("value")] {
-                        println!("{}", string);
-                    } else {
-                        println!("Error converting {} to String", value.name);
-                    };
-                    stack.remove(stack.len() - 1);
-                } else {
-                    println!("Error converting {} to String", value.name);
-                };
-            } else {
-                if value.yapko_type == "String" {
-                    if let Variable::Primitive(YapkoString(string)) = &value.members[&String::from("value")] {
-                        println!("{}", string);
-                    }
-                } else {
-                    println!("Function toString() not found in {}", value.yapko_type);
-                }
-            }
-        } else {
+        // If there are no arguments - just write new line
+        if stack.len() == 0 {
             println!();
+            return;
         }
+
+        let value = stack[stack.len() - 1].clone();
+        if !value.members.contains_key("toString") {
+            // We do not need to convert string to string
+            if value.yapko_type == "String" {
+                let value = &value.members[&String::from("value")];
+                if let Variable::Primitive(YapkoString(string)) = value {
+                    println!("{}", string);
+                }
+                return
+            } else {
+                println!("Function toString() not found in {}", value.yapko_type);
+                process::exit(1);
+            }
+        }
+
+        let to_string_object = &value.members[&String::from("toString")];
+        if let Variable::YapkoObject(yapko_function) = to_string_object {
+            // toString function will push converted string to the stack
+            execute_function(stack, yapko_function);
+            let string_object = &stack[stack.len() - 1];
+            let string_value = &string_object.members[&String::from("value")];
+            if let Variable::Primitive(YapkoString(text)) = string_value {
+                println!("{}", text);
+            } else {
+                println!("Error converting {} to String", value.name);
+            };
+            // Remove string from stack
+            stack.remove(stack.len() - 1);
+        } else {
+            println!("Error converting {} to String", value.name);
+        };
+
+        // Remove value from stack
+        stack.remove(stack.len() - 1);
     }
     let mut output = HashMap::new();
     output.insert(String::from("printLine"), generate_function(String::from("printLine"), print_line));
 
     fn print(stack: &mut Vec<YapkoObject>) {
-        if stack.len() > 0 {
-            let value = stack[stack.len() - 1].clone();
-            if value.members.contains_key("toString") {
-                if let Variable::YapkoObject(yapko_function) = &value.members[&String::from("toString")] {
-                    if let Variable::Primitive(Primitive::Function(function)) = &yapko_function.members[&String::from("value")] {
-                        function(stack);
-                    }
-                    if let Variable::Primitive(YapkoString(string)) = &stack[stack.len() - 1].members[&String::from("value")] {
-                        print!("{}", string);
-                    } else {
-                        println!("Error converting {} to String", value.name);
-                    };
-                    stack.remove(stack.len() - 1);
-                } else {
-                    println!("Error converting {} to String", value.name);
-                };
-            } else {
-                if value.yapko_type == "String" {
-                    if let Variable::Primitive(YapkoString(string)) = &value.members[&String::from("value")] {
-                        print!("{}", string);
-                    }
-                } else {
-                    println!("Function toString() not found in {}", value.yapko_type);
+        let value = stack[stack.len() - 1].clone();
+        if !value.members.contains_key("toString") {
+            // We do not need to convert string to string
+            if value.yapko_type == "String" {
+                let value = &value.members[&String::from("value")];
+                if let Variable::Primitive(YapkoString(string)) = value {
+                    println!("{}", string);
                 }
+                return
+            } else {
+                println!("Function toString() not found in {}", value.yapko_type);
+                process::exit(1);
             }
-        } else {
-            println!();
         }
+
+        let to_string_object = &value.members[&String::from("toString")];
+        if let Variable::YapkoObject(yapko_function) = to_string_object {
+            // toString function will push converted string to the stack
+            execute_function(stack, yapko_function);
+            let string_object = &stack[stack.len() - 1];
+            let string_value = &string_object.members[&String::from("value")];
+            if let Variable::Primitive(YapkoString(text)) = string_value {
+                println!("{}", text);
+            } else {
+                println!("Error converting {} to String", value.name);
+            };
+            // Remove string from stack
+            stack.remove(stack.len() - 1);
+        } else {
+            println!("Error converting {} to String", value.name);
+        };
+
+        // Remove value from stack
+        stack.remove(stack.len() - 1);
     }
     output.insert(String::from("print"), generate_function(String::from("print"), print));
 

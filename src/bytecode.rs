@@ -122,13 +122,17 @@ impl ByteCode {
             TokenType::Operator => {
                 return if node.token.value == "!" {
                     let mut output = vec![];
-                    output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                    output.append(
+                        &mut self.generate_bytecode(node.children[0].clone())
+                    );
                     output.push(self.commands[&node.token.value]);
                     output.push(0);
                     output
                 } else if node.token.value == "." {
                     let mut output = vec![];
-                    output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                    output.append(
+                        &mut self.generate_bytecode(node.children[0].clone())
+                    );
                     output.push(self.commands[&node.token.value]);
                     for ch in node.children[1].token.value.chars() {
                         output.push(ch as u8);
@@ -153,8 +157,12 @@ impl ByteCode {
                     output
                 } else {
                     let mut output = vec![];
-                    output.append(&mut self.generate_bytecode(node.children[0].clone()));
-                    output.append(&mut self.generate_bytecode(node.children[1].clone()));
+                    output.append(
+                        &mut self.generate_bytecode(node.children[0].clone())
+                    );
+                    output.append(
+                        &mut self.generate_bytecode(node.children[1].clone())
+                    );
                     output.push(self.commands[&node.token.value]);
                     output.push(0);
                     output
@@ -165,7 +173,9 @@ impl ByteCode {
                     match node.token.value.as_str(){
                         "let" => {
                             let mut output = vec![];
-                            output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                            output.append(
+                                &mut self.generate_bytecode(node.children[0].clone())
+                            );
                             output[0] = self.commands["set_get"];
                             return output;
                         },
@@ -175,7 +185,10 @@ impl ByteCode {
                             for ch in node.children[0].token.value.chars() {
                                 output.push(ch as u8);
                             }
-                            self.functions.insert(self.brackets_opened.clone()+1, node.children[0].token.value.clone());
+                            self.functions.insert(
+                                self.brackets_opened.clone()+1,
+                                node.children[0].token.value.clone()
+                            );
                             output.push(0);
 
                             // Arguments
@@ -206,7 +219,9 @@ impl ByteCode {
                         },
                         "if" => {
                             let mut output = vec![];
-                            output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                            output.append(
+                                &mut self.generate_bytecode(node.children[0].clone())
+                            );
                             output.push(self.commands["if"]);
                             output.push(0);
                             return output;
@@ -215,14 +230,18 @@ impl ByteCode {
                             let mut output = vec![];
                             output.push(self.commands["condition"]);
                             output.push(0);
-                            output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                            output.append(
+                                &mut self.generate_bytecode(node.children[0].clone())
+                            );
                             output.push(self.commands["while"]);
                             output.push(0);
                             return output;
                         }
                         "return" => {
                             let mut output = vec![];
-                            output.append(&mut self.generate_bytecode(node.children[0].clone()));
+                            output.append(
+                                &mut self.generate_bytecode(node.children[0].clone())
+                            );
                             output.push(0);
                             return output;
                         }
