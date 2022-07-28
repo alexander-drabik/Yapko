@@ -32,6 +32,7 @@ impl VM {
             *scope += 1;
             scopes.push(HashMap::new());
         }
+
         fn end_scope(scopes: &mut Vec<HashMap<String, YapkoObject>>, scope: &mut usize, invoke_started_at_scope: usize, used_variables: &mut Vec<(usize, String)>) {
             if scopes.len() > *scope {
                 scopes.remove(*scope);
@@ -39,6 +40,21 @@ impl VM {
             *scope -= 1;
             if *scope == invoke_started_at_scope {
                 used_variables.clear();
+            }
+        }
+
+        fn operator_to_function_name(a: String) -> &'static str {
+            match a.as_str() {
+                "+" => "add",
+                "-" => "sub",
+                "*" => "mul",
+                "/" => "div",
+                "<" => "smallerThan",
+                ">" => "greaterThan",
+                "<=" => "smallerOrEqual",
+                ">=" => "greaterOrEqual",
+                "==" => "equalTo",
+                &_ => {""}
             }
         }
 
@@ -53,6 +69,9 @@ impl VM {
         let mut loop_map:HashMap<usize, Vec<u8>> = HashMap::new();
         let mut loop_started_at = 0;
         let mut loop_current = 0;
+
+        let mut inside_class = false;
+        let mut class_name = String::new();
 
         let mut i = 0;
         loop {
@@ -208,44 +227,16 @@ impl VM {
                             }
                         }
                         "+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"!=" => {
-                            let operator = match commands[&command].as_str() {
-                                "+" => {
-                                    "add"
-                                }
-                                "-" => {
-                                    "sub"
-                                }
-                                "*" => {
-                                    "mul"
-                                }
-                                "/" => {
-                                    "div"
-                                }
-                                "<" => {
-                                    "smallerThan"
-                                }
-                                ">" => {
-                                    "greaterThan"
-                                }
-                                "<=" => {
-                                    "smallerOrEqual"
-                                }
-                                ">=" => {
-                                    "greaterOrEqual"
-                                }
-                                "==" => {
-                                    "equalTo"
-                                }
-                                &_ => {""}
-                            };
+                            let function_name= operator_to_function_name(commands[&command].clone());
+
                             let a = self.stack[&self.stack.len()-2].clone();
-                            if a.members.contains_key(&*operator) {
-                                if let Variable::YapkoObject(yapko_function) = a.members[operator].clone() {
+                            if a.members.contains_key(&*function_name) {
+                                if let Variable::YapkoObject(yapko_function) = a.members[function_name].clone() {
                                     if let Variable::Primitive(Function(function)) = yapko_function.members["value"] {
                                         function(&mut self.stack);
                                     }
                                 } else {
-                                    println!("Variable {} ({}) does not implement function '{}'", a.name, a.yapko_type, operator);
+                                    println!("Variable {} ({}) does not implement function '{}'", a.name, a.yapko_type, function_name);
                                 }
                             }
                         }
@@ -279,6 +270,7 @@ impl VM {
                         }
                         "." => {
                             let left = self.stack[&self.stack.len()-1].clone();
+                            self.stack.remove(&self.stack.len()-1);
 
                             if left.members.contains_key(&*argument) {
                                 if let Variable::YapkoObject(variable) = left.members[&argument.clone()].clone() {
@@ -333,6 +325,7 @@ impl VM {
                                 new_scope(&mut self.scopes, &mut current_scope);
                             }
                         }
+
                         "condition" => {
                             inside_loop = true;
                             loop_map.remove(&current_scope);
@@ -340,6 +333,7 @@ impl VM {
                             loop_started_at = current_scope;
                             loop_current = current_scope;
                         }
+
                         "while" => {
                             let condition = self.stack[&self.stack.len()-1].clone();
                             if let Variable::Primitive(Boolean(boolean)) = condition.members["value"] {
@@ -352,7 +346,27 @@ impl VM {
                             }
                         }
 
+                        "class" => {
+                            new_scope(&mut self.scopes, &mut current_scope);
+                            inside_class = true;
+                            class_name = argument.clone();
+                        }
+
                         "close" => {
+                            if inside_class {
+                                let mut hashmap = HashMap::new();
+                                for (name, yapko_object) in &self.scopes[current_scope] {
+                                    hashmap.insert(name.to_string(), Variable::YapkoObject(yapko_object.clone()));
+                                }
+                                self.scopes[current_scope-1].insert(class_name.clone(), YapkoObject {
+                                    name: class_name.clone(),
+                                    yapko_type: "class".to_string(),
+                                    members: hashmap
+                                });
+
+                                inside_class = false;
+                            }
+
                             end_scope(&mut self.scopes, &mut current_scope, invoke_started_at_scope.clone(), &mut used_variables);
                             if loop_map.contains_key(&current_scope) {
                                 let mut index = i;
@@ -380,7 +394,7 @@ impl VM {
                                 inside_if = false;
                                 continue;
                             }
-                        } else if commands[&command] == "if" || commands[&command] == "while"{
+                        } else if commands[&command] == "if" || commands[&command] == "while" {
                             current_scope+=1;
                         }
                     }

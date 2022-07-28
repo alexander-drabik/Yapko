@@ -35,6 +35,7 @@ impl Keywords {
         list.insert(String::from("return"));
         list.insert(String::from("if"));
         list.insert(String::from("while"));
+        list.insert(String::from("class"));
 
         Keywords {
             list

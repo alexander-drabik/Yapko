@@ -55,9 +55,6 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
         } else {
             println!("Error converting {} to String", value.name);
         };
-
-        // Remove value from stack
-        stack.remove(stack.len() - 1);
     }
     let mut output = HashMap::new();
     output.insert(String::from("printLine"), generate_function(String::from("printLine"), print_line));
@@ -94,9 +91,6 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
         } else {
             println!("Error converting {} to String", value.name);
         };
-
-        // Remove value from stack
-        stack.remove(stack.len() - 1);
     }
     output.insert(String::from("print"), generate_function(String::from("print"), print));
 
@@ -104,7 +98,7 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
     int_class.yapko_type = String::from("class");
     output.insert(String::from("Int"), int_class);
 
-    let mut string_class = generate_string(String::from("Int"), String::new());
+    let mut string_class = generate_string(String::from("String"), String::new());
     string_class.yapko_type = String::from("class");
     output.insert(String::from("String"), string_class);
 
