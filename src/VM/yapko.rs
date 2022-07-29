@@ -66,7 +66,7 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
             if value.yapko_type == "String" {
                 let value = &value.members[&String::from("value")];
                 if let Variable::Primitive(YapkoString(string)) = value {
-                    println!("{}", string);
+                    print!("{}", string);
                 }
                 return
             } else {
@@ -82,7 +82,7 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
             let string_object = &stack[stack.len() - 1];
             let string_value = &string_object.members[&String::from("value")];
             if let Variable::Primitive(YapkoString(text)) = string_value {
-                println!("{}", text);
+                print!("{}", text);
             } else {
                 println!("Error converting {} to String", value.name);
             };
