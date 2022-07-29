@@ -1,8 +1,6 @@
 use std::collections::HashMap;
-use std::env::remove_var;
-use std::hash::Hash;
 use std::process;
-use crate::yapko::{generate_boolean, generate_int, generate_null, generate_string, generate_yapko_function, Primitive, Variable, YapkoObject};
+use crate::yapko::{generate_boolean, generate_int, generate_null, generate_string, generate_yapko_function,  Variable, YapkoObject};
 use crate::yapko::Primitive::{Boolean, Function, YapkoFunction};
 
 pub struct VM {
@@ -187,7 +185,7 @@ impl VM {
                                     Variable::Primitive(YapkoFunction(..)) => {
                                         if let Variable::Primitive(
                                             YapkoFunction(
-                                                mut function_bytecode,
+                                                function_bytecode,
                                                 this_used_variables
                                             )
                                         ) = a.members["value"].clone() {

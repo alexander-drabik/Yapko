@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::process;
-use crate::yapko::Primitive::{Function, YapkoString};
+use crate::yapko::Primitive::{YapkoString};
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{

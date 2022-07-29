@@ -55,7 +55,7 @@ impl ByteCode {
         }
     }
 
-    pub fn generate_bytecode(&mut self, mut node: Node) -> Vec<u8> {
+    pub fn generate_bytecode(&mut self, node: Node) -> Vec<u8> {
         match node.token.token_type {
             TokenType::Identifier => {
                 // Function

@@ -62,10 +62,6 @@ fn main() {
             commands.insert(v, k);
         }
 
-        for byte in &compiled_code {
-            //println!("{} {}", byte, *byte as char);
-        }
-
         let mut interpreter = VM::new();
         interpreter.scopes[0] = generate_standard();
         interpreter.interpret(compiled_code, commands);
