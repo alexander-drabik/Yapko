@@ -174,55 +174,58 @@ impl VM {
                             };
                             let a = self.stack[index].clone();
                             self.stack.remove(index);
-                            match &a.members["value"] {
-                                Variable::Primitive(Function(..)) => {
-                                    if let Variable::Primitive(Function(function)) = a.members["value"] {
-                                        function(&mut self.stack);
-                                    } else  {
-                                        println!("Cannot invoke '{}'", a.name);
-                                        return;
-                                    };
-                                }
-                                Variable::Primitive(YapkoFunction(..)) => {
-                                    if let Variable::Primitive(
-                                        YapkoFunction(
-                                            mut function_bytecode,
-                                            this_used_variables
-                                        )
-                                    ) = a.members["value"].clone() {
-                                        let mut index = i+2;
-                                        // Insert scope_new (val: 24)
-                                        bytecode.insert(i, 24);
-
-                                        // Insert everything inside function
-                                        bytecode.insert(i+1, 0);
-                                        for byte2 in function_bytecode {
-                                            bytecode.insert(index, byte2);
-                                            index += 1;
-                                        }
-
-                                        // Insert scope_end (val: 25)
-                                        bytecode.insert(index, 25);
-
-                                        // Set function's scope
-                                        used_variables.append(&mut this_used_variables.clone());
-                                        invoke_started_at_scope = current_scope;
-
-                                    } else  {
-                                        println!("Cannot invoke '{}'", a.name);
-                                        return;
-                                    };
-                                }
-                                _ => {
-                                    if a.yapko_type == "class" {
-                                        // Create variable with default parameters
-                                        let mut new_a = a.clone();
-                                        new_a.yapko_type = a.name.clone();
-                                        self.stack.push(new_a.clone());
-                                    } else {
-                                        println!("Cannot invoke '{}'", a.name);
-                                        return;
+                            if a.yapko_type == "Function" || a.yapko_type == "YapkoFunction" {
+                                match &a.members["value"] {
+                                    Variable::Primitive(Function(..)) => {
+                                        if let Variable::Primitive(Function(function)) = a.members["value"] {
+                                            function(&mut self.stack);
+                                        } else {
+                                            println!("Cannot invoke '{}'", a.name);
+                                            return;
+                                        };
                                     }
+                                    Variable::Primitive(YapkoFunction(..)) => {
+                                        if let Variable::Primitive(
+                                            YapkoFunction(
+                                                mut function_bytecode,
+                                                this_used_variables
+                                            )
+                                        ) = a.members["value"].clone() {
+                                            let mut index = i + 2;
+                                            // Insert scope_new (val: 24)
+                                            bytecode.insert(i, 24);
+
+                                            // Insert everything inside function
+                                            bytecode.insert(i + 1, 0);
+                                            for byte2 in function_bytecode {
+                                                bytecode.insert(index, byte2);
+                                                index += 1;
+                                            }
+
+                                            // Insert scope_end (val: 25)
+                                            bytecode.insert(index, 25);
+                                            bytecode.insert(index+1, 0);
+
+                                            // Set function's scope
+                                            used_variables.append(&mut this_used_variables.clone());
+                                            invoke_started_at_scope = current_scope;
+                                        } else {
+                                            println!("Cannot invoke '{}'", a.name);
+                                            return;
+                                        };
+                                    }
+                                    _ => {
+                                    }
+                                }
+                            } else {
+                                if a.yapko_type == "class" {
+                                    // Create variable with default parameters
+                                    let mut new_a = a.clone();
+                                    new_a.yapko_type = a.name.clone();
+                                    self.stack.push(new_a.clone());
+                                } else {
+                                    println!("Cannot invoke '{}'", a.name);
+                                    return;
                                 }
                             }
                         }
