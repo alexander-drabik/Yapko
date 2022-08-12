@@ -377,6 +377,10 @@ impl VM {
                                 }
                             }
                         }
+
+                        "return" => {
+                            //self.stack.push(self.stack[&self.stack.len()-1].clone());
+                        }
                         _ => {}
                     }
 

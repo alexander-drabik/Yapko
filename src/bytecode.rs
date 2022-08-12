@@ -48,6 +48,7 @@ impl ByteCode {
         commands.insert(String::from("!="), 42);
         commands.insert(String::from("."), 43);
         commands.insert(String::from("class"), 44);
+        commands.insert(String::from("return"), 45);
         ByteCode {
             commands,
             brackets_opened: 0,
@@ -243,6 +244,8 @@ impl ByteCode {
                             output.append(
                                 &mut self.generate_bytecode(node.children[0].clone())
                             );
+                            output.push(0);
+                            output.push(self.commands["return"]);
                             output.push(0);
                             return output;
                         }

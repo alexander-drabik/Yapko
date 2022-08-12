@@ -32,6 +32,8 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
                 if let Variable::Primitive(YapkoString(string)) = value {
                     println!("{}", string);
                 }
+                // Remove string from stack
+                stack.remove(stack.len() - 1);
                 return
             } else {
                 println!("Function toString() not found in {}", value.yapko_type);
@@ -55,6 +57,7 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
         } else {
             println!("Error converting {} to String", value.name);
         };
+
     }
     let mut output = HashMap::new();
     output.insert(String::from("printLine"), generate_function(String::from("printLine"), print_line));
