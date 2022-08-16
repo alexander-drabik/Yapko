@@ -5,7 +5,7 @@ use crate::lexer::{Token, TokenType};
 pub struct Node {
     pub(crate) token: Token,
     pub(crate) children: Vec<Node>,
-    pub(crate) invoke: bool
+    pub(crate) invoke: bool,
 }
 
 impl Node {
@@ -15,13 +15,13 @@ impl Node {
         }
         println!("{}", self.token.value);
         for child in &self.children {
-            child.print(amount+1);
+            child.print(amount + 1);
         }
     }
 }
 
 pub struct Parser {
-    operator_values: HashMap<String, i32>
+    operator_values: HashMap<String, i32>,
 }
 
 impl Parser {
@@ -51,7 +51,7 @@ impl Parser {
 
         operator.insert(String::from("."), 16);
 
-        Parser{operator_values: operator}
+        Parser { operator_values: operator }
     }
 
     pub fn parse_tokens(&self, tokens: Vec<Token>) -> Node {
@@ -60,7 +60,7 @@ impl Parser {
         #[derive(Clone)]
         struct Operator {
             value: String,
-            index: usize
+            index: usize,
         }
         let mut operators = vec![];
         let mut tokens_inside_parens = vec![];
@@ -79,9 +79,9 @@ impl Parser {
                 if parens_opened == 0 {
                     if nodes.len() > 0 && matches!(nodes[index-1].token.token_type, TokenType::Identifier) {
                         if tokens_inside_parens.len() > 0 {
-                            nodes[index-1].children.push(self.parse_tokens(tokens_inside_parens.clone()));
+                            nodes[index - 1].children.push(self.parse_tokens(tokens_inside_parens.clone()));
                         }
-                        nodes[index-1].invoke = true;
+                        nodes[index - 1].invoke = true;
                         tokens_inside_parens.clear();
                     } else {
                         if tokens_inside_parens.len() > 0 {
@@ -99,14 +99,14 @@ impl Parser {
                 nodes.push(Node {
                     token: token.clone(),
                     children: vec![],
-                    invoke: false
+                    invoke: false,
                 });
 
                 match nodes.last().expect("Node loading error").token.token_type {
                     TokenType::Operator => {
                         operators.push(Operator {
                             value: nodes[nodes.len() - 1].clone().token.value,
-                            index
+                            index,
                         });
                     }
                     _ => {}
@@ -125,10 +125,10 @@ impl Parser {
             let index = operator.index.clone();
             if operator.value == "!" {
                 // add right side
-                let node = nodes[operator.index+1].clone();
+                let node = nodes[operator.index + 1].clone();
                 nodes[operator.index].children.push(node);
 
-                nodes.remove(operator.index+1);
+                nodes.remove(operator.index + 1);
 
                 // two items were removed, so every index higher than the current one needs to be lowered by 2
                 for operator2 in &mut operators {
@@ -138,16 +138,16 @@ impl Parser {
                 }
             } else {
                 // add left side
-                let node = nodes[operator.index-1].clone();
+                let node = nodes[operator.index - 1].clone();
                 nodes[operator.index].children.push(node);
 
                 // add right side
-                let node = nodes[operator.index+1].clone();
+                let node = nodes[operator.index + 1].clone();
                 nodes[operator.index].children.push(node);
 
                 // remove used nodes
-                nodes.remove(operator.index+1);
-                nodes.remove(operator.index-1);
+                nodes.remove(operator.index + 1);
+                nodes.remove(operator.index - 1);
 
                 // two items were removed, so every index higher than the current one needs to be lowered by 2
                 for operator2 in &mut operators {
@@ -156,11 +156,10 @@ impl Parser {
                     }
                 }
             }
-
         }
 
         let mut max_index = if nodes.len() >= 1 {
-            nodes.len()-1
+            nodes.len() - 1
         } else {
             0
         };
@@ -169,10 +168,10 @@ impl Parser {
                 break;
             }
             if matches!(nodes[index].token.token_type, TokenType::Keyword) {
-                if index+1 <= nodes.len() {
-                    let node = nodes[index+1].clone();
+                if index + 1 <= nodes.len() {
+                    let node = nodes[index + 1].clone();
                     nodes[index].children.push(node);
-                    nodes.remove(index+1);
+                    nodes.remove(index + 1);
                     max_index -= 1;
                 }
             }

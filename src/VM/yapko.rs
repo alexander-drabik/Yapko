@@ -57,10 +57,13 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
         } else {
             println!("Error converting {} to String", value.name);
         };
-
     }
+
     let mut output = HashMap::new();
-    output.insert(String::from("printLine"), generate_function(String::from("printLine"), print_line));
+    output.insert(
+        String::from("printLine"),
+        generate_function(String::from("printLine"), print_line)
+    );
 
     fn print(stack: &mut Vec<YapkoObject>) {
         let value = stack[stack.len() - 1].clone();
@@ -132,6 +135,7 @@ pub enum Primitive {
 pub struct YapkoObject {
     pub name: String,
     pub yapko_type: String,
+    pub parent: String,
     pub members: HashMap<String, Variable>,
 }
 
@@ -239,6 +243,7 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
 
     YapkoObject {
         name,
+        parent: "".to_string(),
         yapko_type: "Int".parse().unwrap(),
         members: hashmap![String::from("value") => Variable::Primitive(Primitive::Int(value)),
             String::from("toString") => Variable::YapkoObject(generate_function(String::from("toString"), to_string)),
@@ -255,6 +260,7 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
 pub fn generate_string(name: String, value: String) -> YapkoObject {
     YapkoObject {
         name,
+        parent: "".to_string(),
         yapko_type: "String".parse().unwrap(),
         members: hashmap![String::from("value") => Variable::Primitive(Primitive::YapkoString(value))]
     }
@@ -273,6 +279,7 @@ pub fn generate_boolean(name: String, value: bool) -> YapkoObject {
     }
     YapkoObject {
         name,
+        parent: "".to_string(),
         yapko_type: "Boolean".parse().unwrap(),
         members: hashmap![
             String::from("value") => Variable::Primitive(Primitive::Boolean(value)),
@@ -285,6 +292,7 @@ pub fn generate_yapko_function(name: String, bytecode: Vec<u8>, mut used_variabl
     used_variables.push((scope, name.clone()));
     YapkoObject {
         name,
+        parent: "".to_string(),
         yapko_type: String::from("YapkoFunction"),
         members: hashmap!(
             String::from("value") => Variable::Primitive(Primitive::YapkoFunction(bytecode, used_variables))
@@ -295,6 +303,7 @@ pub fn generate_yapko_function(name: String, bytecode: Vec<u8>, mut used_variabl
 pub fn generate_function(name: String, function: fn(stack: &mut Vec<YapkoObject>)) -> YapkoObject {
     YapkoObject {
         name,
+        parent: "".to_string(),
         yapko_type: String::from("Function"),
         members: hashmap![String::from("value") => Variable::Primitive(Primitive::Function(function))]
     }
@@ -303,6 +312,7 @@ pub fn generate_function(name: String, function: fn(stack: &mut Vec<YapkoObject>
 pub fn generate_null(name: String) -> YapkoObject {
     YapkoObject {
         name,
+        parent: "".to_string(),
         yapko_type: "Null".parse().unwrap(),
         members: hashmap!(String::from("value") => Variable::Primitive(Primitive::Null))
     }

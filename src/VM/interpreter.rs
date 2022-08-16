@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env::var;
 use std::process;
 use crate::yapko::{generate_boolean, generate_int, generate_null, generate_string, generate_yapko_function,  Variable, YapkoObject};
 use crate::yapko::Primitive::{Boolean, Function, YapkoFunction};
@@ -140,17 +141,41 @@ impl VM {
                                 } else {
                                     let mut contains = false;
                                     let mut index = 0;
+                                    let mut parent: (usize, String) = (0, "".to_string());
+                                    let mut has_parent = false;
                                     for (i, j) in &used_variables {
                                         if *j == argument {
                                             index = i.clone();
                                             contains = true;
                                         }
+                                        if *i == 2137 {
+                                            has_parent = true;
+                                            parent = (*i, j.clone())
+                                        }
                                     }
-                                    if contains {
-                                        self.stack.push(self.scopes[index][&argument].clone());
-                                    } else {
-                                        println!("'{}' not found", argument);
-                                        return;
+
+                                    let mut found = false;
+                                    if has_parent {
+                                        for scope in &self.scopes {
+                                            if scope.contains_key(&*parent.1) {
+                                                if scope[&*parent.1].members.contains_key(&*argument) {
+                                                    if let Variable::YapkoObject(yapko) = scope[&*parent.1].members[&*argument].clone() {
+                                                        self.stack.push(yapko);
+                                                        found = true;
+                                                    } else {
+                                                        todo!()
+                                                    };
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if !found {
+                                        if contains {
+                                            self.stack.push(self.scopes[index][&argument].clone());
+                                        } else {
+                                            println!("'{}' not found", argument);
+                                            return;
+                                        }
                                     }
                                 }
                             }
@@ -206,6 +231,12 @@ impl VM {
 
                                             // Set function's scope
                                             used_variables.append(&mut this_used_variables.clone());
+                                            for scope in &self.scopes {
+                                                if scope.contains_key(&a.parent) {
+                                                    used_variables.append(&mut vec![(2137, a.parent.clone())]);
+                                                }
+                                            }
+
                                             invoke_started_at_scope = current_scope;
                                         } else {
                                             println!("Cannot invoke '{}'", a.name);
@@ -274,7 +305,10 @@ impl VM {
                             self.stack.remove(&self.stack.len()-1);
 
                             if left.members.contains_key(&*argument) {
-                                if let Variable::YapkoObject(variable) = left.members[&argument.clone()].clone() {
+                                if let Variable::YapkoObject(mut variable) = left.members[&argument.clone()].clone() {
+                                    if variable.yapko_type == "YapkoFunction" {
+                                        variable.parent = left.name;
+                                    }
                                     self.stack.push(variable);
                                 }
                             } else {
@@ -361,6 +395,7 @@ impl VM {
                                 }
                                 self.scopes[current_scope-1].insert(class_name.clone(), YapkoObject {
                                     name: class_name.clone(),
+                                    parent: "".to_string(),
                                     yapko_type: "class".to_string(),
                                     members: hashmap
                                 });
