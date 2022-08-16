@@ -65,7 +65,7 @@ impl VM {
         let mut if_opened_at = 0;
 
         let mut inside_loop = false;
-        let mut loop_map:HashMap<usize, Vec<u8>> = HashMap::new();
+        let mut loop_map: HashMap<usize, Vec<u8>> = HashMap::new();
         let mut loop_started_at = 0;
         let mut loop_current = 0;
 
@@ -99,10 +99,22 @@ impl VM {
                             }
                             let index = self.stack.len();
                             self.stack[index-1].name = String::from(&self.stack[index-2].name);
-                            for i in (0..=current_scope).rev() {
-                                if self.scopes[i].contains_key(&self.stack[index - 2].name) {
-                                    *self.scopes[i].get_mut(&self.stack[index - 2].name).unwrap() = self.stack[index - 1].clone();
-                                    break;
+                            if self.stack[index-2].parent == "" {
+                                for i in (0..=current_scope).rev() {
+                                    if self.scopes[i].contains_key(&self.stack[index - 2].name) {
+                                        *self.scopes[i].get_mut(&self.stack[index - 2].name).unwrap() = self.stack[index - 1].clone();
+                                        break;
+                                    }
+                                }
+                            } else {
+                                for i in (0..=current_scope).rev() {
+                                    if self.scopes[i].contains_key(&*self.stack[index - 2].parent.clone()) {
+                                        let parent = self.scopes[i].get_mut(&self.stack[index - 2].parent).unwrap().members.get_mut(&self.stack[index - 2].name).unwrap();
+                                        if let Variable::YapkoObject(parent) = parent {
+                                            *parent = self.stack[index-1].clone()
+                                        }
+                                        break;
+                                    }
                                 }
                             }
 
@@ -159,7 +171,8 @@ impl VM {
                                         for scope in &self.scopes {
                                             if scope.contains_key(&*parent.1) {
                                                 if scope[&*parent.1].members.contains_key(&*argument) {
-                                                    if let Variable::YapkoObject(yapko) = scope[&*parent.1].members[&*argument].clone() {
+                                                    if let Variable::YapkoObject(mut yapko) = scope[&*parent.1].members[&*argument].clone() {
+                                                        yapko.parent = parent.1.clone();
                                                         self.stack.push(yapko);
                                                         found = true;
                                                     } else {
@@ -306,9 +319,7 @@ impl VM {
 
                             if left.members.contains_key(&*argument) {
                                 if let Variable::YapkoObject(mut variable) = left.members[&argument.clone()].clone() {
-                                    if variable.yapko_type == "YapkoFunction" {
-                                        variable.parent = left.name;
-                                    }
+                                    variable.parent = left.name;
                                     self.stack.push(variable);
                                 }
                             } else {
@@ -391,7 +402,9 @@ impl VM {
                             if inside_class {
                                 let mut hashmap = HashMap::new();
                                 for (name, yapko_object) in &self.scopes[current_scope] {
-                                    hashmap.insert(name.to_string(), Variable::YapkoObject(yapko_object.clone()));
+                                    let mut new_yapko_object = yapko_object.clone();
+                                    new_yapko_object.parent = class_name.clone();
+                                    hashmap.insert(name.to_string(), Variable::YapkoObject(new_yapko_object));
                                 }
                                 self.scopes[current_scope-1].insert(class_name.clone(), YapkoObject {
                                     name: class_name.clone(),
