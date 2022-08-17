@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::env::var;
 use std::process;
 use crate::{ByteCode, compile, get_file_content};
-use crate::yapko::{generate_boolean, generate_int, generate_null, generate_string, generate_yapko_function,  Variable, YapkoObject};
+use crate::yapko::{generate_boolean, generate_float, generate_int, generate_null, generate_string, generate_yapko_function, Variable, YapkoObject};
 use crate::yapko::Primitive::{Boolean, Function, YapkoFunction};
 
 pub struct VM {
@@ -125,13 +125,17 @@ impl VM {
                             }
                         }
                         "push_num" => {
-                            self.stack.push(generate_int(String::from("$int"), argument.to_string().parse::<i32>().unwrap()));
+                            if argument.chars().all(|c| c.is_numeric()) {
+                                self.stack.push(generate_int(String::from("$int"), argument.to_string().parse::<i32>().unwrap()));
+                            } else {
+                                self.stack.push(generate_float(String::from("$float"), argument.to_string().parse::<f64>().unwrap()));
+                            }
                         }
                         "push_str" => {
                             self.stack.push(generate_string(String::from("$string"), argument.to_string()));
                         }
                         "push_bool" => {
-                            self.stack.push(generate_boolean(String::from("bool"), if argument == "1" {true} else {false}));
+                            self.stack.push(generate_boolean(String::from("$bool"), if argument == "1" {true} else {false}));
                         }
                         "get" => {
                             if used_variables.len() == 0 {

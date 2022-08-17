@@ -100,9 +100,9 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
     }
     output.insert(String::from("print"), generate_function(String::from("print"), print));
 
-    let mut int_class = generate_int(String::from("Int"), 0);
+    let mut int_class = generate_int(String::from("Float"), 0);
     int_class.yapko_type = String::from("class");
-    output.insert(String::from("Int"), int_class);
+    output.insert(String::from("Float"), int_class);
 
     let mut string_class = generate_string(String::from("String"), String::new());
     string_class.yapko_type = String::from("class");
@@ -124,6 +124,7 @@ pub enum Variable {
 #[derive(Clone)]
 pub enum Primitive {
     Int(i32),
+    Float(f64),
     YapkoString(String),
     YapkoFunction(Vec<u8>, Vec<(usize, String)>),
     Function(fn (stack: &mut Vec<YapkoObject>)),
@@ -246,6 +247,124 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
         parent: "".to_string(),
         yapko_type: "Int".parse().unwrap(),
         members: hashmap![String::from("value") => Variable::Primitive(Primitive::Int(value)),
+            String::from("toString") => Variable::YapkoObject(generate_function(String::from("toString"), to_string)),
+            String::from("add") => Variable::YapkoObject(generate_function(String::from("add"), add)),
+            String::from("sub") => Variable::YapkoObject(generate_function(String::from("sub"), sub)),
+            String::from("mul") => Variable::YapkoObject(generate_function(String::from("mul"), mul)),
+            String::from("div") => Variable::YapkoObject(generate_function(String::from("div"), div)),
+            String::from("smallerThan") => Variable::YapkoObject(generate_function(String::from("smallerThan"), smaller_than)),
+            String::from("greaterThan") => Variable::YapkoObject(generate_function(String::from("greaterThan"), greater_than))
+        ]
+    }
+}
+
+pub fn generate_float(name: String, value: f64) -> YapkoObject {
+    fn to_string(stack: &mut Vec<YapkoObject>) {
+        let float = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        if let Variable::Primitive(Primitive::Float(value)) = float.members["value"] {
+            stack.push(generate_string(float.name, value.to_string()));
+        } else {
+            println!("Error converting {} to String", float.name);
+            return;
+        };
+    }
+
+    fn add(stack: &mut Vec<YapkoObject>) {
+        let left  = stack[stack.len()-2].clone();
+        let right = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Float(left_value)) = left.members["value"] {
+            if right.yapko_type != "Float" {
+                println!("Float does not implement add({})", right.yapko_type);
+            }
+            if let Variable::Primitive(Primitive::Float(right_value)) = right.members["value"] {
+                stack.push(generate_float(left.name, left_value + right_value));
+            }
+        }
+    }
+    fn sub(stack: &mut Vec<YapkoObject>) {
+        let left  = stack[stack.len()-2].clone();
+        let right = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Float(left_value)) = left.members["value"] {
+            if right.yapko_type != "Float" {
+                println!("Float does not implement add({})", right.yapko_type);
+            }
+            if let Variable::Primitive(Primitive::Float(right_value)) = right.members["value"] {
+                stack.push(generate_float(left.name, left_value - right_value));
+            }
+        }
+    }
+    fn div(stack: &mut Vec<YapkoObject>) {
+        let left  = stack[stack.len()-2].clone();
+        let right = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Float(left_value)) = left.members["value"] {
+            if right.yapko_type != "Float" {
+                println!("Float does not implement add({})", right.yapko_type);
+            }
+            if let Variable::Primitive(Primitive::Float(right_value)) = right.members["value"] {
+                stack.push(generate_float(left.name, left_value / right_value));
+            }
+        }
+    }
+    fn mul(stack: &mut Vec<YapkoObject>) {
+        let left  = stack[stack.len()-2].clone();
+        let right = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Float(left_value)) = left.members["value"] {
+            if right.yapko_type != "Float" {
+                println!("Float does not implement mul({})", right.yapko_type);
+            }
+            if let Variable::Primitive(Primitive::Float(right_value)) = right.members["value"] {
+                stack.push(generate_float(left.name, left_value * right_value));
+            }
+        }
+    }
+    fn smaller_than(stack: &mut Vec<YapkoObject>) {
+        let left = stack[stack.len()-2].clone();
+        let right= stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Float(left_value)) = left.members["value"] {
+            if let Variable::Primitive(Primitive::Float(right_value)) = right.members["value"] {
+                stack.push(generate_boolean("$bool".parse().unwrap(), left_value < right_value))
+            } else {
+                println!("Cannot compare Float to not-Float")
+            }
+        }
+    }
+
+    fn greater_than(stack: &mut Vec<YapkoObject>) {
+        let left = stack[stack.len()-2].clone();
+        let right= stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Float(left_value)) = left.members["value"] {
+            if let Variable::Primitive(Primitive::Float(right_value)) = right.members["value"] {
+                stack.push(generate_boolean("$bool".parse().unwrap(), left_value > right_value))
+            } else {
+                println!("Cannot compare Float to not-Float")
+            }
+        }
+    }
+
+    YapkoObject {
+        name,
+        parent: "".to_string(),
+        yapko_type: "Float".parse().unwrap(),
+        members: hashmap![String::from("value") => Variable::Primitive(Primitive::Float(value)),
             String::from("toString") => Variable::YapkoObject(generate_function(String::from("toString"), to_string)),
             String::from("add") => Variable::YapkoObject(generate_function(String::from("add"), add)),
             String::from("sub") => Variable::YapkoObject(generate_function(String::from("sub"), sub)),

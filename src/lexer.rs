@@ -66,12 +66,24 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
             continue
         }
         match character {
-            '+'|'-'|'*'|'/'|'='|':'|'!'|'>'|'<'|'.' => {
+            '+'|'-'|'*'|'/'|'='|':'|'!'|'>'|'<' => {
                 let token = Token {
                     token_type: TokenType::Operator,
                     value: character.to_string()
                 };
                 output.push(token);
+            }
+            '.' => {
+                if !current.chars().all(|c| char::is_numeric(c)) {
+                    let token = Token {
+                        token_type: TokenType::Operator,
+                        value: character.to_string()
+                    };
+                    output.push(token);
+                } else {
+                    current += ".";
+                    single_character_token_present = false;
+                }
             }
             '\n'|';' => {
                 let token = Token {
@@ -142,7 +154,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
 
 fn generate_token_from_string(str: String) -> Token {
     if !str.is_empty() {
-        if str.chars().all(char::is_numeric) {
+        if str.chars().all(|c| char::is_numeric(c) || c == '.') {
             let token = Token {
                 token_type: TokenType::NumberLiteral,
                 value: str.to_string()

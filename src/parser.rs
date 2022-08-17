@@ -167,11 +167,11 @@ impl Parser {
             if index > max_index {
                 break;
             }
-            if matches!(nodes[index].token.token_type, TokenType::Keyword) {
-                if index + 1 <= nodes.len() {
-                    let node = nodes[index + 1].clone();
-                    nodes[index].children.push(node);
-                    nodes.remove(index + 1);
+            if matches!(nodes[max_index - index].token.token_type, TokenType::Keyword) {
+                if (max_index - index) + 1 <= nodes.len() {
+                    let node = nodes[(max_index - index) + 1].clone();
+                    nodes[max_index - index].children.push(node);
+                    nodes.remove((max_index - index) + 1);
                     max_index -= 1;
                 }
             }
