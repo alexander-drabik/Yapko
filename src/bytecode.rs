@@ -49,6 +49,8 @@ impl ByteCode {
         commands.insert(String::from("."), 43);
         commands.insert(String::from("class"), 44);
         commands.insert(String::from("return"), 45);
+        commands.insert(String::from("execute"), 46);
+
         ByteCode {
             commands,
             brackets_opened: 0,
@@ -252,6 +254,15 @@ impl ByteCode {
                         "class" => {
                             let mut output = vec![];
                             output.push(self.commands["class"]);
+                            for ch in node.children[0].token.value.chars() {
+                                output.push(ch as u8);
+                            }
+                            output.push(0);
+                            return output;
+                        }
+                        "execute" => {
+                            let mut output = vec![];
+                            output.push(self.commands["execute"]);
                             for ch in node.children[0].token.value.chars() {
                                 output.push(ch as u8);
                             }

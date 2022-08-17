@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::env::var;
 use std::process;
+use crate::{ByteCode, compile, get_file_content};
 use crate::yapko::{generate_boolean, generate_int, generate_null, generate_string, generate_yapko_function,  Variable, YapkoObject};
 use crate::yapko::Primitive::{Boolean, Function, YapkoFunction};
 
@@ -59,6 +60,7 @@ impl VM {
 
         let mut used_variables:Vec<(usize, String)> = Vec::new();
         let mut current_function_argument = String::new();
+        let mut function_name = String::new();
         let mut invoke_started_at_scope = 0;
 
         let mut inside_if = false;
@@ -336,6 +338,7 @@ impl VM {
                         }
                         "fun_start" => {
                             self.inside_function = true;
+                            function_name = argument.clone();
                         }
                         "scope_new" => {
                             new_scope(&mut self.scopes, &mut current_scope);
@@ -426,9 +429,20 @@ impl VM {
                             }
                         }
 
-                        "return" => {
-                            //self.stack.push(self.stack[&self.stack.len()-1].clone());
+                        "execute" => {
+                            // Compile file
+                            let code = get_file_content(&format!("{}.yapko", &argument));
+                            let compiled_code = compile(code, &mut ByteCode::new());
+
+                            // Paste bytecode
+                            let mut index = i;
+                            for byte in compiled_code {
+                                bytecode.insert(index, byte);
+                                index += 1;
+                            }
+                            bytecode.insert(index, 0);
                         }
+
                         _ => {}
                     }
 

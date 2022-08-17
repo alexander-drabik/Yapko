@@ -36,6 +36,7 @@ impl Keywords {
         list.insert(String::from("if"));
         list.insert(String::from("while"));
         list.insert(String::from("class"));
+        list.insert(String::from("execute"));
 
         Keywords {
             list
@@ -147,7 +148,7 @@ fn generate_token_from_string(str: String) -> Token {
                 value: str.to_string()
             };
             return token;
-        } else if str.chars().all(char::is_alphabetic) {
+        } else if str.chars().nth(0).unwrap().is_alphabetic() {
             return if Keywords::new().list.contains(&*str) {
                 Token {
                     token_type: TokenType::Keyword,
