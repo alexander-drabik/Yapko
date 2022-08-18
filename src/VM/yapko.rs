@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::process;
-use crate::yapko::Primitive::{YapkoString};
+use crate::yapko::Primitive::{Function, YapkoString};
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{
@@ -9,6 +9,7 @@ macro_rules! hashmap {
          map
     }}
 }
+
 fn execute_function(stack: &mut Vec<YapkoObject>, function_object: &YapkoObject) {
     let value = &function_object.members[&String::from("value")];
     if let Variable::Primitive(Primitive::Function(function)) = value {
@@ -16,6 +17,7 @@ fn execute_function(stack: &mut Vec<YapkoObject>, function_object: &YapkoObject)
     }
 }
 
+// Generate standard library
 pub fn generate_standard() -> HashMap<String, YapkoObject> {
     fn print_line(stack: &mut Vec<YapkoObject>) {
         // If there are no arguments - just write new line
@@ -100,14 +102,42 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
     }
     output.insert(String::from("print"), generate_function(String::from("print"), print));
 
-    let mut int_class = generate_int(String::from("Float"), 0);
+    // Create class for IO operations
+    fn io_read_line(stack: &mut Vec<YapkoObject>) {
+        // Read line
+        let mut line = String::new();
+        std::io::stdin().read_line(&mut line).expect("TODO: panic message");
+
+        // Push line to stack
+        let string = generate_string("$String".to_string(), line);
+        stack.push(string);
+    }
+    let mut io_class = YapkoObject {
+        name: "IO".to_string(),
+        yapko_type: "class".to_string(),
+        parent: "".to_string(),
+        members: hashmap![
+            String::from("readLine") => Variable::YapkoObject(generate_function("readLine".to_string(), io_read_line))
+        ]
+    };
+    output.insert(String::from("IO"), io_class);
+
+    // Create class for integers
+    let mut int_class = generate_int(String::from("Int"), 0);
     int_class.yapko_type = String::from("class");
     output.insert(String::from("Float"), int_class);
 
+    // Create class for floats
+    let mut float_class = generate_float(String::from("Float"), 0.0);
+    float_class.yapko_type = String::from("class");
+    output.insert(String::from("Float"), float_class);
+
+    // Create class for strings
     let mut string_class = generate_string(String::from("String"), String::new());
     string_class.yapko_type = String::from("class");
     output.insert(String::from("String"), string_class);
 
+    // Create class for booleans
     let mut boolean_class = generate_boolean(String::from("Boolean"), false);
     boolean_class.yapko_type = String::from("class");
     output.insert(String::from("Boolean"), boolean_class);
