@@ -220,6 +220,12 @@ impl VM {
                                 match &a.members["value"] {
                                     Variable::Primitive(Function(..)) => {
                                         if let Variable::Primitive(Function(function)) = a.members["value"] {
+                                            /*for i in (0..self.scopes.len()).rev() {
+                                                if self.scopes[i].contains_key(&*a.parent) {
+                                                    self.stack.push(self.scopes[i][&*a.parent].clone());
+                                                    break;
+                                                }
+                                            }*/
                                             function(&mut self.stack);
                                         } else {
                                             println!("Cannot invoke '{}'", a.name);
@@ -321,10 +327,12 @@ impl VM {
                         }
                         "." => {
                             let left = self.stack[&self.stack.len()-1].clone();
-                            self.stack.remove(&self.stack.len()-1);
 
                             if left.members.contains_key(&*argument) {
                                 if let Variable::YapkoObject(mut variable) = left.members[&argument.clone()].clone() {
+                                    if variable.yapko_type != "Function" {
+                                        self.stack.remove(&self.stack.len()-1);
+                                    }
                                     variable.parent = left.name;
                                     self.stack.push(variable);
                                 }

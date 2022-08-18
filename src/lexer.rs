@@ -74,7 +74,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
                 output.push(token);
             }
             '.' => {
-                if !current.chars().all(|c| char::is_numeric(c)) {
+                if !current.chars().all(|c| char::is_numeric(c)) || current.is_empty() {
                     let token = Token {
                         token_type: TokenType::Operator,
                         value: character.to_string()

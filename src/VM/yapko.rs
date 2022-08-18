@@ -104,6 +104,9 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
 
     // Create class for IO operations
     fn io_read_line(stack: &mut Vec<YapkoObject>) {
+        // Remove self
+        stack.remove(stack.len()-1);
+
         // Read line
         let mut line = String::new();
         std::io::stdin().read_line(&mut line).expect("TODO: panic message");
@@ -407,11 +410,24 @@ pub fn generate_float(name: String, value: f64) -> YapkoObject {
 }
 
 pub fn generate_string(name: String, value: String) -> YapkoObject {
+    fn to_int(stack: &mut Vec<YapkoObject>) {
+        let var = stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(YapkoString(string)) = var.members["value"].clone() {
+            let int = string.trim().parse::<i32>().unwrap();
+            stack.push(generate_int("$int".to_string(), int))
+        }
+    }
+
     YapkoObject {
         name,
         parent: "".to_string(),
         yapko_type: "String".parse().unwrap(),
-        members: hashmap![String::from("value") => Variable::Primitive(Primitive::YapkoString(value))]
+        members: hashmap![
+            String::from("value") => Variable::Primitive(Primitive::YapkoString(value)),
+            String::from("toInt") => Variable::YapkoObject(generate_function("toInt".to_string(), to_int))
+        ]
     }
 }
 
