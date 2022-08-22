@@ -54,9 +54,9 @@ fn main() {
 fn compile(code: String, bytecode: &mut ByteCode) -> Vec<u8> {
     let tokens = tokenize(code);
 
-    for token in &tokens {
-        println!("{}", token.value);
-    }
+    //for token in &tokens {
+    //    println!("{}", token.value);
+    //}
     let parser = Parser::new();
     let mut compiled_code: Vec<u8> = vec![];
 

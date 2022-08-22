@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::process;
 use crate::yapko::Primitive::{Function, YapkoString};
+use rand::Rng;
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{
@@ -120,10 +121,42 @@ pub fn generate_standard() -> HashMap<String, YapkoObject> {
         yapko_type: "class".to_string(),
         parent: "".to_string(),
         members: hashmap![
-            String::from("readLine") => Variable::YapkoObject(generate_function("readLine".to_string(), io_read_line))
+            String::from("readLine") => Variable::YapkoObject(
+                generate_function(
+                    "readLine".to_string(),
+                    io_read_line
+                )
+            )
         ]
     };
     output.insert(String::from("IO"), io_class);
+
+    // Create class for random number operations
+    fn random_generate(stack: &mut Vec<YapkoObject>) {
+        // Remove self
+        stack.remove(stack.len()-1);
+
+        // Create rng thread
+        let mut rng = rand::thread_rng();
+        let number = rng.gen();
+
+        // Send number to stack
+        stack.push(generate_int("$int".to_string(), number))
+    }
+    let mut random_class = YapkoObject {
+        name: "Random".to_string(),
+        yapko_type: "class".to_string(),
+        parent: "".to_string(),
+        members: hashmap![
+            String::from("generate") => Variable::YapkoObject(
+                generate_function(
+                    "generate".to_string(),
+                    random_generate
+                )
+            )
+        ]
+    };
+    output.insert(String::from("Random"), random_class);
 
     // Create class for integers
     let mut int_class = generate_int(String::from("Int"), 0);

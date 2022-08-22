@@ -329,10 +329,13 @@ impl VM {
                             let left = self.stack[&self.stack.len()-1].clone();
 
                             if left.members.contains_key(&*argument) {
-                                if let Variable::YapkoObject(mut variable) = left.members[&argument.clone()].clone() {
+                                if let Variable::YapkoObject(
+                                    mut variable
+                                ) = left.members[&argument].clone() {
                                     if variable.yapko_type != "Function" {
                                         self.stack.remove(&self.stack.len()-1);
                                     }
+
                                     variable.parent = left.name;
                                     self.stack.push(variable);
                                 }
