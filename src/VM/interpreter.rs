@@ -105,15 +105,25 @@ impl VM {
                             if self.stack[index-2].parent == "" {
                                 for i in (0..=current_scope).rev() {
                                     if self.scopes[i].contains_key(&self.stack[index - 2].name) {
-                                        *self.scopes[i].get_mut(&self.stack[index - 2].name).unwrap() = self.stack[index - 1].clone();
+                                        *self.scopes[i].get_mut(
+                                            &self.stack[index - 2].name
+                                        ).unwrap() = self.stack[index - 1].clone();
+
                                         break;
                                     }
                                 }
                             } else {
                                 for i in (0..=current_scope).rev() {
                                     if self.scopes[i].contains_key(&*self.stack[index - 2].parent.clone()) {
-                                        let parent = self.scopes[i].get_mut(&self.stack[index - 2].parent).unwrap().members.get_mut(&self.stack[index - 2].name).unwrap();
-                                        if let Variable::YapkoObject(parent) = parent {
+                                        let parent = self.scopes[i].get_mut(
+                                            &self.stack[index - 2].parent
+                                        ).unwrap().members.get_mut(
+                                            &self.stack[index - 2].name
+                                        ).unwrap();
+
+                                        if let Variable::YapkoObject(
+                                            parent
+                                        ) = parent {
                                             *parent = self.stack[index-1].clone()
                                         }
                                         break;
@@ -127,16 +137,36 @@ impl VM {
                         }
                         "push_num" => {
                             if argument.chars().all(|c| c.is_numeric()) {
-                                self.stack.push(generate_int(String::from("$int"), argument.to_string().parse::<i32>().unwrap()));
+                                self.stack.push(
+                                    generate_int(
+                                        String::from("$int"),
+                                        argument.to_string().parse::<i32>().unwrap()
+                                    )
+                                );
                             } else {
-                                self.stack.push(generate_float(String::from("$float"), argument.to_string().parse::<f64>().unwrap()));
+                                self.stack.push(
+                                    generate_float(
+                                        String::from("$float"),
+                                        argument.to_string().parse::<f64>().unwrap()
+                                    )
+                                );
                             }
                         }
                         "push_str" => {
-                            self.stack.push(generate_string(String::from("$string"), argument.to_string()));
+                            self.stack.push(
+                                generate_string(
+                                    String::from("$string"),
+                                    argument.to_string()
+                                )
+                            );
                         }
                         "push_bool" => {
-                            self.stack.push(generate_boolean(String::from("$bool"), if argument == "1" {true} else {false}));
+                            self.stack.push(
+                                generate_boolean(
+                                    String::from("$bool"),
+                                    if argument == "1" {true} else {false}
+                                )
+                            );
                         }
                         "get" => {
                             if used_variables.len() == 0 {
@@ -178,7 +208,9 @@ impl VM {
                                         for scope in &self.scopes {
                                             if scope.contains_key(&*parent.1) {
                                                 if scope[&*parent.1].members.contains_key(&*argument) {
-                                                    if let Variable::YapkoObject(mut yapko) = scope[&*parent.1].members[&*argument].clone() {
+                                                    if let Variable::YapkoObject(
+                                                        mut yapko
+                                                    ) = scope[&*parent.1].members[&*argument].clone() {
                                                         yapko.parent = parent.1.clone();
                                                         self.stack.push(yapko);
                                                         found = true;
@@ -220,13 +252,9 @@ impl VM {
                             if a.yapko_type == "Function" || a.yapko_type == "YapkoFunction" {
                                 match &a.members["value"] {
                                     Variable::Primitive(Function(..)) => {
-                                        if let Variable::Primitive(Function(function)) = a.members["value"] {
-                                            /*for i in (0..self.scopes.len()).rev() {
-                                                if self.scopes[i].contains_key(&*a.parent) {
-                                                    self.stack.push(self.scopes[i][&*a.parent].clone());
-                                                    break;
-                                                }
-                                            }*/
+                                        if let Variable::Primitive(
+                                            Function(function)
+                                        ) = a.members["value"] {
                                             function(&mut self.stack);
                                         } else {
                                             println!("Cannot invoke '{}'", a.name);
@@ -259,7 +287,9 @@ impl VM {
                                             used_variables.append(&mut this_used_variables.clone());
                                             for scope in &self.scopes {
                                                 if scope.contains_key(&a.parent) {
-                                                    used_variables.append(&mut vec![(2137, a.parent.clone())]);
+                                                    used_variables.append(
+                                                        &mut vec![(2137, a.parent.clone())]
+                                                    );
                                                 }
                                             }
 
@@ -291,12 +321,19 @@ impl VM {
 
                             let a = self.stack[&self.stack.len()-2].clone();
                             if a.members.contains_key(&*function_name) {
-                                if let Variable::YapkoObject(yapko_function) = a.members[function_name].clone() {
-                                    if let Variable::Primitive(Function(function)) = yapko_function.members["value"] {
+                                if let Variable::YapkoObject(
+                                    yapko_function
+                                ) = a.members[function_name].clone() {
+                                    if let Variable::Primitive(
+                                        Function(function)
+                                    ) = yapko_function.members["value"] {
                                         function(&mut self.stack);
                                     }
                                 } else {
-                                    println!("Variable {} ({}) does not implement function '{}'", a.name, a.yapko_type, function_name);
+                                    println!(
+                                        "Variable {} ({}) does not implement function '{}'",
+                                        a.name, a.yapko_type, function_name
+                                    );
                                 }
                             }
                         }
@@ -403,7 +440,9 @@ impl VM {
 
                         "while" => {
                             let condition = self.stack[&self.stack.len()-1].clone();
-                            if let Variable::Primitive(Boolean(boolean)) = condition.members["value"] {
+                            if let Variable::Primitive(
+                                Boolean(boolean)
+                            ) = condition.members["value"] {
                                 if !boolean {
                                     loop_map.remove(&current_scope);
                                     inside_if = true;
@@ -425,7 +464,10 @@ impl VM {
                                 for (name, yapko_object) in &self.scopes[current_scope] {
                                     let mut new_yapko_object = yapko_object.clone();
                                     new_yapko_object.parent = class_name.clone();
-                                    hashmap.insert(name.to_string(), Variable::YapkoObject(new_yapko_object));
+                                    hashmap.insert(
+                                        name.to_string(),
+                                        Variable::YapkoObject(new_yapko_object)
+                                    );
                                 }
                                 self.scopes[current_scope-1].insert(class_name.clone(), YapkoObject {
                                     name: class_name.clone(),
