@@ -48,6 +48,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
     let mut output = vec![];
     let mut current = String::new();
     let mut string = String::new();
+    let mut last = ' ';
 
     let mut string_literal_start = false;
     for character in code.chars() {
@@ -66,12 +67,29 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
             continue
         }
         match character {
-            '+'|'-'|'*'|'/'|'='|':'|'!'|'>'|'<' => {
+            '+'|'-'|'*'|'/'|':'|'!'|'>'|'<'|'%' => {
                 let token = Token {
                     token_type: TokenType::Operator,
                     value: character.to_string()
                 };
                 output.push(token);
+            }
+            '=' => {
+                if last == '=' {
+                    output.remove(output.len() - 1);
+
+                    let token = Token {
+                        token_type: TokenType::Operator,
+                        value: "==".to_string()
+                    };
+                    output.push(token);
+                } else {
+                    let token = Token {
+                        token_type: TokenType::Operator,
+                        value: "=".to_string()
+                    };
+                    output.push(token);
+                }
             }
             '.' => {
                 if !current.chars().all(|c| char::is_numeric(c)) || current.is_empty() {
@@ -148,6 +166,7 @@ pub(crate) fn tokenize(code: String) -> Vec<Token> {
             }
             current.clear();
         }
+        last = character;
     }
     return output;
 }

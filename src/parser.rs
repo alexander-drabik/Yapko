@@ -33,23 +33,24 @@ impl Parser {
         operator.insert(String::from("-"), 2);
         operator.insert(String::from("*"), 3);
         operator.insert(String::from("/"), 4);
-        operator.insert(String::from(":"), 5);
+        operator.insert(String::from("%"), 5);
+        operator.insert(String::from(":"), 6);
 
         // Logical operators
-        operator.insert(String::from("and"), 6);
-        operator.insert(String::from("or"), 7);
-        operator.insert(String::from("xor"), 8);
-        operator.insert(String::from("!"), 9);
+        operator.insert(String::from("and"), 7);
+        operator.insert(String::from("or"), 8);
+        operator.insert(String::from("xor"), 9);
+        operator.insert(String::from("!"), 10);
 
         // Comparison operators
-        operator.insert(String::from("<"), 10);
-        operator.insert(String::from("<="), 11);
-        operator.insert(String::from(">"), 12);
-        operator.insert(String::from(">="), 13);
-        operator.insert(String::from("=="), 14);
-        operator.insert(String::from("!="), 15);
+        operator.insert(String::from("<"), 11);
+        operator.insert(String::from("<="), 12);
+        operator.insert(String::from(">"), 13);
+        operator.insert(String::from(">="), 14);
+        operator.insert(String::from("=="), 15);
+        operator.insert(String::from("!="), 16);
 
-        operator.insert(String::from("."), 16);
+        operator.insert(String::from("."), 17);
 
         Parser { operator_values: operator }
     }
@@ -79,13 +80,17 @@ impl Parser {
                 if parens_opened == 0 {
                     if nodes.len() > 0 && matches!(nodes[index-1].token.token_type, TokenType::Identifier) {
                         if tokens_inside_parens.len() > 0 {
-                            nodes[index - 1].children.push(self.parse_tokens(tokens_inside_parens.clone()));
+                            nodes[index - 1].children.push(
+                                self.parse_tokens(tokens_inside_parens.clone())
+                            );
                         }
                         nodes[index - 1].invoke = true;
                         tokens_inside_parens.clear();
                     } else {
                         if tokens_inside_parens.len() > 0 {
-                            nodes.push(self.parse_tokens(tokens_inside_parens.clone()));
+                            nodes.push(self.parse_tokens(
+                                tokens_inside_parens.clone())
+                            );
                             index += 1;
                         }
                         tokens_inside_parens.clear();
@@ -118,7 +123,11 @@ impl Parser {
             }
         }
 
-        operators.sort_by(|a, b| self.operator_values[&b.value].cmp(&self.operator_values[&a.value]));
+        operators.sort_by(
+            |a, b| self.operator_values[&b.value].cmp(
+                &self.operator_values[&a.value]
+            )
+        );
 
         for operator_index in 0..operators.len() {
             let operator = &operators[operator_index];
@@ -130,7 +139,8 @@ impl Parser {
 
                 nodes.remove(operator.index + 1);
 
-                // two items were removed, so every index higher than the current one needs to be lowered by 2
+                // one item was removed, so every index higher than the current one
+                // needs to be lowered by 1
                 for operator2 in &mut operators {
                     if operator2.index > index {
                         operator2.index -= 1;
@@ -149,7 +159,8 @@ impl Parser {
                 nodes.remove(operator.index + 1);
                 nodes.remove(operator.index - 1);
 
-                // two items were removed, so every index higher than the current one needs to be lowered by 2
+                // two items were removed, so every index higher than the current one
+                // needs to be lowered by 2
                 for operator2 in &mut operators {
                     if operator2.index > index {
                         operator2.index -= 2;

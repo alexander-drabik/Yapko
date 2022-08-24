@@ -308,6 +308,41 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
         }
     }
 
+    fn equal_to(stack: &mut Vec<YapkoObject>) {
+        let left = stack[stack.len()-2].clone();
+        let right= stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Int(left_value)) = left.members["value"] {
+            if let Variable::Primitive(Primitive::Int(right_value)) = right.members["value"] {
+                stack.push(
+                    generate_boolean(
+                        "$bool".parse().unwrap(),
+                        left_value == right_value
+                    )
+                )
+            } else {
+                println!("Cannot compare Int to not-Int")
+            }
+        }
+    }
+
+    fn mod_n(stack: &mut Vec<YapkoObject>) {
+        let left = stack[stack.len()-2].clone();
+        let right= stack[stack.len()-1].clone();
+        stack.remove(stack.len()-1);
+        stack.remove(stack.len()-1);
+
+        if let Variable::Primitive(Primitive::Int(left_value)) = left.members["value"] {
+            if let Variable::Primitive(Primitive::Int(right_value)) = right.members["value"] {
+                stack.push(generate_int("$int".to_string(), left_value % right_value))
+            } else {
+                println!("lol")
+            }
+        }
+    }
+
     YapkoObject {
         name,
         parent: "".to_string(),
@@ -318,7 +353,9 @@ pub fn generate_int(name: String, value: i32) -> YapkoObject {
             String::from("sub") => Variable::YapkoObject(generate_function(String::from("sub"), sub)),
             String::from("mul") => Variable::YapkoObject(generate_function(String::from("mul"), mul)),
             String::from("div") => Variable::YapkoObject(generate_function(String::from("div"), div)),
+            String::from("mod") => Variable::YapkoObject(generate_function(String::from("mod"), mod_n)),
             String::from("smallerThan") => Variable::YapkoObject(generate_function(String::from("smallerThan"), smaller_than)),
+            String::from("equalTo") => Variable::YapkoObject(generate_function(String::from("smallerThan"), equal_to)),
             String::from("greaterThan") => Variable::YapkoObject(generate_function(String::from("greaterThan"), greater_than))
         ]
     }

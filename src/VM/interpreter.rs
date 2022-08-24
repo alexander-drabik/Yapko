@@ -49,6 +49,7 @@ impl VM {
                 "-" => "sub",
                 "*" => "mul",
                 "/" => "div",
+                "%" => "mod",
                 "<" => "smallerThan",
                 ">" => "greaterThan",
                 "<=" => "smallerOrEqual",
@@ -283,8 +284,10 @@ impl VM {
                                 }
                             }
                         }
-                        "+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"!=" => {
-                            let function_name= operator_to_function_name(commands[&command].clone());
+                        "+"|"-"|"*"|"/"|"<"|">"|"<="|">="|"=="|"!="|"%" => {
+                            let function_name= operator_to_function_name(
+                                commands[&command].clone()
+                            );
 
                             let a = self.stack[&self.stack.len()-2].clone();
                             if a.members.contains_key(&*function_name) {

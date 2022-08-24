@@ -46,10 +46,11 @@ impl ByteCode {
         commands.insert(String::from(">="), 40);
         commands.insert(String::from("=="), 41);
         commands.insert(String::from("!="), 42);
-        commands.insert(String::from("."), 43);
-        commands.insert(String::from("class"), 44);
-        commands.insert(String::from("return"), 45);
-        commands.insert(String::from("execute"), 46);
+        commands.insert(String::from("%"), 43);
+        commands.insert(String::from("."), 44);
+        commands.insert(String::from("class"), 45);
+        commands.insert(String::from("return"), 46);
+        commands.insert(String::from("execute"), 47);
 
         ByteCode {
             commands,
